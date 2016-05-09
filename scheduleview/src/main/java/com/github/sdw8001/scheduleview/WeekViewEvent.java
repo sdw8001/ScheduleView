@@ -174,9 +174,10 @@ public class WeekViewEvent {
     }
 
     public List<WeekViewEvent> splitWeekViewEvents() {
-        //This function splits the WeekViewEvent in WeekViewEvents by day
+        // WeekViewEvents 에 대해 하루를 기준으로 WeekViewEvent 를 분할한다.
         List<WeekViewEvent> events = new ArrayList<WeekViewEvent>();
-        // The first millisecond of the next day is still the same day. (no need to split events for this).
+
+        // 다음 날의 첫 번째 밀리 초는 여전히 같은 날입니다. (이것에 대한 이벤트를 분할 할 필요 없음).
         Calendar endTime = (Calendar) this.getEndTime().clone();
         endTime.add(Calendar.MILLISECOND, -1);
         if (!WeekViewUtil.isSameDay(this.getStartTime(), endTime)) {

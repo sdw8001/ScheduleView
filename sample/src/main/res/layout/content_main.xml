@@ -11,22 +11,15 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.github.sdw8001.sample.MainActivity"
     tools:showIn="@layout/activity_main">
-
-    <com.alamkanak.weekview.WeekView
-        android:id="@+id/weekView"
+    <Button
+        android:id="@+id/Button_WeekView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:eventTextColor="@android:color/white"
-        app:textSize="12sp"
-        app:hourHeight="60dp"
-        app:headerColumnPadding="8dp"
-        app:headerColumnTextColor="@color/toolbar_text"
-        app:headerRowPadding="12dp"
-        app:columnGap="8dp"
-        app:noOfVisibleDays="3"
-        app:headerRowBackgroundColor="@color/toolbar"
-        app:dayBackgroundColor="#05000000"
-        app:todayBackgroundColor="#1848adff"
-        app:headerColumnBackground="#ffffffff"
-        app:todayHeaderTextColor="@color/accent" />
+        android:layout_height="wrap_content"
+        android:text="@string/week_view_activity_name"/>
+    <Button
+        android:id="@+id/Button_ScheduleView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/schedule_view_activity_name"
+        android:layout_below="@id/Button_WeekView"/>
 </RelativeLayout>

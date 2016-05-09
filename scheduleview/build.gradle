@@ -14,8 +14,8 @@ publish {
     userOrg = 'sdw8001'
     groupId = 'com.github.sdw8001'
     artifactId = 'schedule-view'
-    publishVersion = '0.0.1'
-    desc = 'ScheduleView Library'
+    publishVersion = '0.0.2'
+    desc = 'ScheduleView Library v.0.0.2'
     website = 'https://github.com/sdw8001/ScheduleView'
 }
 
@@ -41,4 +41,5 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.3.0'
+    compile 'com.android.support:design:23.3.0'
 }

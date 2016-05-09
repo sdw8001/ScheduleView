@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_doctor"
+        android:orderInCategory="100"
+        android:title="의사별"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_chair"
+        android:orderInCategory="100"
+        android:title="체어별"
+        app:showAsAction="never" />
+</menu>

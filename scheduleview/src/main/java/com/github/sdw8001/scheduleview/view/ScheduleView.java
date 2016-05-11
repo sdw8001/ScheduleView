@@ -111,7 +111,8 @@ public class ScheduleView extends View {
     // Draw 에 사용될 Paint 관련
     private Paint mHeaderColumnBackgroundPaint;
     private Paint mEventBackgroundPaint;
-    private Paint mCellFocusPaint;
+    private Paint mFocusedEmptyEventPaint;
+    private Paint mFocusedEventPaint;
 
     // Item 의 Width 값
     private float mWidthPerDay;
@@ -120,7 +121,7 @@ public class ScheduleView extends View {
     private int mMinimumFlingVelocity = 0;
     private int mScaledTouchSlop = 0;
     private int mOverlappingEventGap = 0;
-    private int mDefaultEventColor;
+    private int mDefaultEventColor = Color.parseColor("#9fc6e7");
     private int mEventCornerRadius = 0;
     private int mCachedNumberOfVisible = 3;
 
@@ -150,6 +151,10 @@ public class ScheduleView extends View {
     private int mTodayBackgroundColor = Color.rgb(239, 247, 254);
     private int mHourSeparatorHeight = 2;
     private int mTodayHeaderTextColor = Color.rgb(39, 137, 228);
+    private int mFocusedEmptyEventColor = Color.rgb(32, 32, 255);
+    private int mFocusedEventColor = Color.rgb(255, 32, 32);
+    private int mFocusedEmptyEventStrokeWidth = 3;
+    private int mFocusedEventStrokeWidth = 3;
     private int mAllDayEventHeight = 100;
     private int mScrollDuration = 250;
     private int mHeaderType = Header.HEADER_USING_CALENDAR;
@@ -161,7 +166,7 @@ public class ScheduleView extends View {
     private int mEventRectShadowRadius = 5;
     private int mHeaderRowShadowRadius = 5;
     private EventRect mFocusedEventRect = null;
-    private ScheduleRect mFocusedEmptyScheduleRect = null;
+    private ScheduleRect mFocusedEmptyEventRect = null;
     private boolean mCellFocusable = true;
     private boolean mEventRectShadowEnabled = true;
     private boolean mHeaderRowShadowEnabled = true;
@@ -242,6 +247,10 @@ public class ScheduleView extends View {
             mEventTextSize = a.getDimensionPixelSize(R.styleable.ScheduleView_eventTextSize, (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, mEventTextSize, context.getResources().getDisplayMetrics()));
             mEventTextColor = a.getColor(R.styleable.ScheduleView_eventTextColor, mEventTextColor);
             mEventPadding = a.getDimensionPixelSize(R.styleable.ScheduleView_eventPadding, mEventPadding);
+            mFocusedEmptyEventColor = a.getColor(R.styleable.ScheduleView_focusedEmptyEventColor, mFocusedEmptyEventColor);
+            mFocusedEventColor = a.getColor(R.styleable.ScheduleView_focusedEventColor, mFocusedEventColor);
+            mFocusedEmptyEventStrokeWidth = a.getDimensionPixelSize(R.styleable.ScheduleView_focusedEmptyEventStrokeWidth, mFocusedEmptyEventStrokeWidth);
+            mFocusedEventStrokeWidth = a.getDimensionPixelSize(R.styleable.ScheduleView_focusedEventStrokeWidth, mFocusedEventStrokeWidth);
             mHeaderColumnBackgroundColor = a.getColor(R.styleable.ScheduleView_headerColumnBackground, mHeaderColumnBackgroundColor);
 //            mDayNameLength = a.getInteger(R.styleable.ScheduleView_dayNameLength, mDayNameLength);
             mOverlappingEventGap = a.getDimensionPixelSize(R.styleable.ScheduleView_overlappingEventGap, mOverlappingEventGap);
@@ -350,12 +359,20 @@ public class ScheduleView extends View {
             this.setLayerType(LAYER_TYPE_SOFTWARE, mEventBackgroundPaint);
         }
 
+
         // Prepare cell focused paint.
-        mCellFocusPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        mCellFocusPaint.setColor(Color.rgb(255, 32, 32));
-        mCellFocusPaint.setStyle(Paint.Style.STROKE);
-        mCellFocusPaint.setStrokeWidth(3);
-        mCellFocusPaint.setPathEffect(new DashPathEffect(new float[]{10, 3}, 0));
+        mFocusedEmptyEventPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mFocusedEmptyEventPaint.setColor(mFocusedEmptyEventColor);
+        mFocusedEmptyEventPaint.setStyle(Paint.Style.STROKE);
+        mFocusedEmptyEventPaint.setStrokeWidth(mFocusedEmptyEventStrokeWidth);
+        mFocusedEmptyEventPaint.setPathEffect(new DashPathEffect(new float[]{10, 3}, 0));
+
+        // Prepare cell focused paint.
+        mFocusedEventPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mFocusedEventPaint.setColor(mFocusedEventColor);
+        mFocusedEventPaint.setStyle(Paint.Style.STROKE);
+        mFocusedEventPaint.setStrokeWidth(mFocusedEventStrokeWidth);
+        mFocusedEventPaint.setPathEffect(new DashPathEffect(new float[]{10, 3}, 0));
 
         // Prepare header column background color.
         mHeaderColumnBackgroundPaint = new Paint();
@@ -366,9 +383,6 @@ public class ScheduleView extends View {
         mEventTextPaint.setStyle(Paint.Style.FILL);
         mEventTextPaint.setColor(mEventTextColor);
         mEventTextPaint.setTextSize(mEventTextSize);
-
-        // Set default event color.
-        mDefaultEventColor = Color.parseColor("#9fc6e7");
 
         mScaleDetector = new ScaleGestureDetector(mContext, new ScaleGestureDetector.OnScaleGestureListener() {
             @Override
@@ -511,6 +525,13 @@ public class ScheduleView extends View {
                     // TouchPoint 가 EventRect 에 포함되면
                     if (event.rectF != null && event.rectF.contains(e.getX(), e.getY())) {
 
+                        // FocusedEventRect 가 현재 EventRect 와 같은 Rect 를 선택 했을 때, 해당 Point 의 EmptyEventRect 로 Focus 를 이동한다.
+                        if (mFocusedEventRect != null && getFocusedEventRect().rectF == event.rectF) {
+                            if (mEmptyViewClickListener != null && isContainsContentsArea(e) && clickEmptyRect(e)) {
+                                return super.onSingleTapConfirmed(e);
+                            }
+                        }
+
                         setFocusedEventRect(event);
 
                         // EventLongPressListener 에 이벤트를 전달하고
@@ -526,18 +547,8 @@ public class ScheduleView extends View {
             }
 
             // if 내부는 EmptyViewLongPressListener 에 이벤트를 전달하는 역할
-            if (mEmptyViewClickListener != null && isContainsContentsArea(e)) {
-                for (ScheduleRect scheduleRect : mScheduleRects) {
-
-                    // TouchPoint 가 EventRect 에 포함되면
-                    if (scheduleRect.rectF != null && scheduleRect.rectF.contains(e.getX(), e.getY())) {
-                        playSoundEffect(SoundEffectConstants.CLICK);
-                        setFocusedEmptyScheduleRect(scheduleRect);
-                        mEmptyViewClickListener.onEmptyViewClicked(scheduleRect);
-                        invalidate();
-                        return super.onSingleTapConfirmed(e);
-                    }
-                }
+            if (mEmptyViewClickListener != null && isContainsContentsArea(e) && clickEmptyRect(e)) {
+                return super.onSingleTapConfirmed(e);
             }
 
             // if 내부는 GroupHeaderClickListener 에 이벤트를 전달하는 역할
@@ -599,6 +610,26 @@ public class ScheduleView extends View {
             }
         }
     };
+
+    /**
+     * MotionEvent 의 Point 가 EmptyEventRect 에 Click 가능한경우 mEmptyViewClickListener 에 onEmptyViewClicked Event 를 전달하고 true 를 반환한다.
+     * @param e
+     * @return
+     */
+    private boolean clickEmptyRect(MotionEvent e) {
+        for (ScheduleRect scheduleRect : mScheduleRects) {
+
+            // TouchPoint 가 EventRect 에 포함되면
+            if (scheduleRect.rectF != null && scheduleRect.rectF.contains(e.getX(), e.getY())) {
+                playSoundEffect(SoundEffectConstants.CLICK);
+                setFocusedEmptyScheduleRect(scheduleRect);
+                mEmptyViewClickListener.onEmptyViewClicked(scheduleRect);
+                invalidate();
+                return true;
+            }
+        }
+        return false;
+    }
 
     /////////////////////////////////////////////////////////////////
     //
@@ -834,7 +865,7 @@ public class ScheduleView extends View {
             startPixel += mWidthPerDay + mColumnGap;
         }
         if (mCellFocusable && getFocusedEmptyScheduleRect() != null && getFocusedEmptyScheduleRect().rectF != null) {
-            canvas.drawRoundRect(getFocusedEmptyScheduleRect().rectF, mEventCornerRadius, mEventCornerRadius, mCellFocusPaint);
+            canvas.drawRoundRect(getFocusedEmptyScheduleRect().rectF, mEventCornerRadius, mEventCornerRadius, mFocusedEmptyEventPaint);
         }
 
 //        // 왼쪽 상단의 첫 Cell 배경색을 HeaderBackground 색으로 그린다.(Cell 숨김 목적)
@@ -1135,7 +1166,7 @@ public class ScheduleView extends View {
                         mEventBackgroundPaint.setColor(mEventRects.get(i).event.getBackgroundColor() == 0 ? mDefaultEventColor : mEventRects.get(i).event.getBackgroundColor());
                         canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mEventBackgroundPaint);
                         if (mCellFocusable && getFocusedEventRect() != null && getFocusedEventRect().originalEvent.getKey() == mEventRects.get(i).originalEvent.getKey())
-                            canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mCellFocusPaint);
+                            canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mFocusedEventPaint);
                         drawEventTitle(mEventRects.get(i).event, mEventRects.get(i).rectF, canvas, top, left);
                     } else
                         mEventRects.get(i).rectF = null;
@@ -1437,15 +1468,15 @@ public class ScheduleView extends View {
 
     public void setFocusedEventRect(EventRect focusedEvent) {
         this.mFocusedEventRect = focusedEvent;
-        this.mFocusedEmptyScheduleRect = null;
+        this.mFocusedEmptyEventRect = null;
     }
 
     public ScheduleRect getFocusedEmptyScheduleRect() {
-        return mFocusedEmptyScheduleRect;
+        return mFocusedEmptyEventRect;
     }
 
     public void setFocusedEmptyScheduleRect(ScheduleRect focusedEmptyScheduleRect) {
-        this.mFocusedEmptyScheduleRect = focusedEmptyScheduleRect;
+        this.mFocusedEmptyEventRect = focusedEmptyScheduleRect;
         this.mFocusedEventRect = null;
     }
 

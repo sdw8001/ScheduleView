@@ -30,6 +30,11 @@
             android:label="@string/schedule_view_activity_name"
             android:theme="@style/AppTheme.NoActionBar">
         </activity>
+        <activity
+            android:name=".WeekScheduleViewActivity"
+            android:label="@string/week_schedule_view_activity_name"
+            android:theme="@style/AppTheme.NoActionBar">
+        </activity>
     </application>
 
 </manifest>

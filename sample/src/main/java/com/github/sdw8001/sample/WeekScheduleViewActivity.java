@@ -9,9 +9,11 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+/**
+ * Created by sdw80 on 2016-05-17.
+ */
+public class WeekScheduleViewActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,7 +35,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.Button_WeekView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, WeekViewActivity.class);
+                Intent intent = new Intent(WeekScheduleViewActivity.this, WeekViewActivity.class);
                 startActivity(intent);
             }
         });
@@ -41,15 +43,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.Button_ScheduleView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, ScheduleViewActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        findViewById(R.id.Button_WeekScheduleView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, WeekScheduleViewActivity.class);
+                Intent intent = new Intent(WeekScheduleViewActivity.this, ScheduleViewActivity.class);
                 startActivity(intent);
             }
         });

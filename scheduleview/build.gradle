@@ -42,4 +42,6 @@ dependencies {
     testCompile 'junit:junit:4.12'
     compile 'com.android.support:appcompat-v7:23.3.0'
     compile 'com.android.support:design:23.3.0'
+    compile 'net.danlew:android.joda:2.9.3'
+    compile 'com.github.citux:datetimepicker:0.1.2'
 }

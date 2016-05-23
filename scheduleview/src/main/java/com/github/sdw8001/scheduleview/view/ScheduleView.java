@@ -496,13 +496,13 @@ public class ScheduleView extends View {
                     mScroller.fling((int) mCurrentOrigin.x, (int) mCurrentOrigin.y,
                             (int) (velocityX * mXScrollingSpeed), 0,
                             Integer.MIN_VALUE, Integer.MAX_VALUE,
-                            (int) -(mHourHeight * 24 + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mHeaderMarginBottom + mTimeTextHeight / 2 - getHeight()), 0);
+                            (int) -(mHourHeight * 24 + getDrawEventsTop() - getHeight()), 0);
                     break;
                 case VERTICAL:
                     mScroller.fling((int) mCurrentOrigin.x, (int) mCurrentOrigin.y,
                             0, (int) velocityY,
                             Integer.MIN_VALUE, Integer.MAX_VALUE,
-                            (int) -(mHourHeight * 24 + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mHeaderMarginBottom + mTimeTextHeight / 2 - getHeight()), 0);
+                            (int) -(mHourHeight * 24 + getDrawEventsTop() - getHeight()), 0);
                     break;
             }
 
@@ -647,11 +647,17 @@ public class ScheduleView extends View {
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        drawWeekCalendar(canvas);
+
         // Draw the header row.
         drawHeaderRowAndEvents(canvas);
 
         // Draw the time column and all the axes/separators.
         drawTimeColumnAndAxes(canvas);
+    }
+
+    private void drawWeekCalendar(Canvas canvas) {
+
     }
 
     private void calculateHeaderHeight() {
@@ -703,10 +709,8 @@ public class ScheduleView extends View {
 
         calculateHeaderHeight(); // header 의 높이는 적당한지 확인하기위해 계산 (AllDay events 에 따라 다름)
 
-        Calendar today = ScheduleViewUtil.today();
-
         if (mAreDimensionsInvalid) {
-            mEffectiveMinHourHeight = Math.max(mMinHourHeight, (int) ((getHeight() - mHeaderHeight - mHeaderRowPadding * 2 * getHeaderRowCount() - mHeaderMarginBottom) / 24));
+            mEffectiveMinHourHeight = Math.max(mMinHourHeight, (int) ((getHeight() - (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)) / 24));
 
             mAreDimensionsInvalid = false;
             if (mScrollToDay != null)
@@ -746,8 +750,8 @@ public class ScheduleView extends View {
         }
 
         // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mCurrentOrigin.y < getHeight() - mHourHeight * 24 - mHeaderHeight - mHeaderRowPadding * 2 * getHeaderRowCount() - mHeaderMarginBottom - mTimeTextHeight / 2)
-            mCurrentOrigin.y = getHeight() - mHourHeight * 24 - mHeaderHeight - mHeaderRowPadding * 2 * getHeaderRowCount() - mHeaderMarginBottom - mTimeTextHeight / 2;
+        if (mCurrentOrigin.y < getHeight() - mHourHeight * 24 - getDrawEventsTop())
+            mCurrentOrigin.y = getHeight() - mHourHeight * 24 - getDrawEventsTop();
 
         // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
         if (mCurrentOrigin.y > 0) {
@@ -782,7 +786,7 @@ public class ScheduleView extends View {
 //        day.add(Calendar.HOUR, 6);
 
         // 각 시간에 구분선을 그리기 위해 준비
-        int lineCount = (int) ((getHeight() - mHeaderHeight - mHeaderRowPadding * 2 * getHeaderRowCount() - mHeaderMarginBottom) / mHourHeight) + 1;
+        int lineCount = (int) ((getHeight() - (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)) / mHourHeight) + 1;
         float[] hourLines = new float[lineCount * 4];   // drawLines 에서 float 값 4개씩 x1, y1, x2, y2 로 값을 가져와 line 을 그리기 때문에 lineCount * 4 를 한다
 
         // EventRect 캐시 삭제
@@ -799,7 +803,7 @@ public class ScheduleView extends View {
         }
 
         // Events 를 Paint 하기위한 영역을 ClipRect 로 지정합니다.
-        canvas.clipRect(mHeaderColumnWidth, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mHeaderMarginBottom + mTimeTextHeight / 2, getWidth(), getHeight(), Region.Op.REPLACE);
+        canvas.clipRect(getDrawEventsLeft(), getDrawEventsTop(), getDrawEventsLeft() + getDrawEventsWidth(), getDrawEventsTop() + getDrawEventHeight(), Region.Op.REPLACE);
 
         if (mScheduleRects == null || mRefreshEvents) {
 
@@ -828,14 +832,14 @@ public class ScheduleView extends View {
             // 각 Day Event Cell 에 Background 를 그린다.
             float start = (startPixel < mHeaderColumnWidth ? mHeaderColumnWidth : startPixel);
             if (mWidthPerDay + startPixel - start > 0) {
-                canvas.drawRect(start, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mTimeTextHeight / 2 + mHeaderMarginBottom, startPixel + mWidthPerDay, getHeight(), mDayBackgroundPaint);
+                canvas.drawRect(start, getDrawEventsTop(), startPixel + mWidthPerDay, getHeight(), mDayBackgroundPaint);
             }
 
             // hourLines 배열에 시간 분할선을 그리기 위한 현재 HeaderColumn 의 index 에 해당되는 x,y 좌표들을 설정한다.
             int i = 0;
             for (int hourNumber = 0; hourNumber < 24; hourNumber++) {
-                float top = mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mCurrentOrigin.y + mHourHeight * hourNumber + mTimeTextHeight / 2 + mHeaderMarginBottom;
-                if (top > mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mTimeTextHeight / 2 + mHeaderMarginBottom - mHourSeparatorHeight && top < getHeight() && startPixel + mWidthPerDay - start > 0) {
+                float top = getDrawEventsTop() + mCurrentOrigin.y + mHourHeight * hourNumber;
+                if (top > getDrawEventsTop() - mHourSeparatorHeight && top < getHeight() && startPixel + mWidthPerDay - start > 0) {
                     hourLines[i * 4] = start;
                     hourLines[i * 4 + 1] = top;
                     hourLines[i * 4 + 2] = startPixel + mWidthPerDay;
@@ -873,7 +877,7 @@ public class ScheduleView extends View {
 //        canvas.drawRect(0, 0, mTimeTextWidth + mHeaderColumnPadding * 2, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderBackgroundPaint);
 
         // Header 를 Paint 하기위한 영역을 ClipRect 로 지정합니다.
-        canvas.clipRect(mHeaderColumnWidth, 0, getWidth(), mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), Region.Op.REPLACE);
+        canvas.clipRect(getDrawHeaderLeft(), getDrawHeaderTop(), getDrawHeaderLeft() + getDrawHeaderWidth(), getDrawHeaderTop() + getDrawHeaderHeight(), Region.Op.REPLACE);
 
         // Header Background 를 그린다.
 //        canvas.drawRect(0, 0, getWidth(), mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderBackgroundPaint);
@@ -887,7 +891,8 @@ public class ScheduleView extends View {
                 break;
 
             // 이상하게 clip y 값을 0 으로 해도 text 그릴때 mHeaderTextHeight 정도 마이너스되서 계산된다. 그래서 y 값을 임의로 mHeaderTextHeight 더해줌
-            float startHeaderY = mHeaderTextHeight;
+//            float startHeaderY = mHeaderTextHeight;
+            float startHeaderY = getDrawHeaderTop() + mHeaderTextHeight;
 
             // Header Group Text 를 그린다.
             if (mViewMode == VIEW_CHILD) {
@@ -1088,13 +1093,12 @@ public class ScheduleView extends View {
 
             // Calculate top.
             float top = mHourHeight * 24 * (mScheduleRects.get(i).startTime.get(Calendar.HOUR_OF_DAY) * 60 + mScheduleRects.get(i).startTime.get(Calendar.MINUTE)) / 1440
-                    + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount()
-                    + mHeaderMarginBottom + mTimeTextHeight / 2 + mEventMarginTop;
+                    + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
             // Calculate bottom.
-            float bottom = mHourHeight * 24 * (mScheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * 60 + mScheduleRects.get(i).endTime.get(Calendar.MINUTE)) / 1440
-                    + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount()
-                    + mHeaderMarginBottom + mTimeTextHeight / 2 - mEventMarginBottom;
+            float bottom = mHourHeight * 24 * ((mScheduleRects.get(i).endTime.get(Calendar.DAY_OF_MONTH) - mScheduleRects.get(i).startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 +
+                    mScheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * 60 + mScheduleRects.get(i).endTime.get(Calendar.MINUTE)) / 1440
+                    + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 
             // Calculate left.
             float left = startFromPixel + 0F * mWidthPerDay + mEventMarginLeft;
@@ -1107,8 +1111,7 @@ public class ScheduleView extends View {
                 right -= mOverlappingEventGap;
 
             // Draw the event and the event name on top of it.
-            if (left < right && left < getWidth() && top < getHeight() && right > mHeaderColumnWidth &&
-                    bottom > mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mTimeTextHeight / 2 + mHeaderMarginBottom) {
+            if (left <= right && left <= getWidth() && top <= getHeight() && right >= mHeaderColumnWidth && bottom >= getDrawEventsTop()) {
                 mScheduleRects.get(i).rectF = new RectF(left, top, right, bottom);
             } else
                 mScheduleRects.get(i).rectF = null;
@@ -1136,13 +1139,11 @@ public class ScheduleView extends View {
 
                     // Calculate top.
                     float top = mHourHeight * 24 * mEventRects.get(i).top / 1440
-                            + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount()
-                            + mHeaderMarginBottom + mTimeTextHeight / 2 + mEventMarginTop;
+                            + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
                     // Calculate bottom.
                     float bottom = mHourHeight * 24 * mEventRects.get(i).bottom / 1440
-                            + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount()
-                            + mHeaderMarginBottom + mTimeTextHeight / 2 - (mEventMarginTop + mEventMarginBottom);
+                            + mCurrentOrigin.y + getDrawEventsTop() - (mEventMarginTop + mEventMarginBottom);
 
                     // Calculate left.
                     float left = startFromPixel + mEventRects.get(i).left * mWidthPerDay + mEventMarginLeft;
@@ -1155,12 +1156,7 @@ public class ScheduleView extends View {
                         right -= mOverlappingEventGap;
 
                     // Draw the event and the event name on top of it.
-                    if (left < right &&
-                            left < getWidth() &&
-                            top < getHeight() &&
-                            right > mHeaderColumnWidth &&
-                            bottom > mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mTimeTextHeight / 2 + mHeaderMarginBottom
-                            ) {
+                    if (left <= right && left <= getWidth() && top <= getHeight() && right >= mHeaderColumnWidth && bottom >= getDrawEventsTop()) {
                         mEventRects.get(i).rectF = new RectF(left, top, right, bottom);
                         // TODO : Event Color 항목이 없어서 주석
                         mEventBackgroundPaint.setColor(mEventRects.get(i).event.getBackgroundColor() == 0 ? mDefaultEventColor : mEventRects.get(i).event.getBackgroundColor());
@@ -1177,14 +1173,14 @@ public class ScheduleView extends View {
 
     private void drawTimeColumnAndAxes(Canvas canvas) {
         // TimeColumn Header 의 배경을 그립니다.
-        canvas.drawRect(0, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderColumnWidth, getHeight(), mHeaderColumnBackgroundPaint);
+        canvas.drawRect(0, getDrawHeaderTop() + getDrawHeaderHeight(), mHeaderColumnWidth, getHeight(), mHeaderColumnBackgroundPaint);
 
         // 왼쪽의 Time Column Header 를 Paint 하기위한 영역을 ClipRect 로 지정합니다.
-        canvas.clipRect(0, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderColumnWidth, getHeight(), Region.Op.REPLACE);
+        canvas.clipRect(0, getDrawHeaderTop() + getDrawHeaderHeight(), mHeaderColumnWidth, getHeight(), Region.Op.REPLACE);
 
         // 왼쪽의 Time Column Header 에 시간 별 Text 를 그립니다.
         for (int i = 0; i < 24; i++) {
-            float top = mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount() + mCurrentOrigin.y + mHourHeight * i + mHeaderMarginBottom;
+            float top = getDrawHeaderTop() + getDrawHeaderHeight() + mCurrentOrigin.y + mHourHeight * i + mHeaderMarginBottom;
 
             // Draw the text if its y position is not outside of the visible area. The pivot point of the text is the point at the bottom-right corner.
             String time = getDateTimeInterpreter().interpretTime(i);
@@ -1303,7 +1299,7 @@ public class ScheduleView extends View {
      * @return 포함되면 true, 포함되지 않으면 false
      */
     private boolean isContainsContentsArea(MotionEvent e) {
-        return e.getX() > mHeaderColumnWidth && e.getY() > (mHeaderHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom);
+        return e.getX() > mHeaderColumnWidth && e.getY() > (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom);
     }
 
     /**
@@ -1335,6 +1331,77 @@ public class ScheduleView extends View {
             startPixel += mWidthPerDay + mColumnGap;
         }
         return null;
+    }
+
+    /////////////////////////////////////////////////////////////////
+    //
+    //      OnDraw 좌표 관련 함수
+    //
+    /////////////////////////////////////////////////////////////////
+
+    /**
+     * Header 가 그려지는 Rect 의 Left 값을 반환한다.
+     * @return
+     */
+    private float getDrawHeaderLeft() {
+        return mHeaderColumnWidth;
+    }
+
+    /**
+     * Header 가 그려지는 Rect 의 Top 값을 반환한다.
+     * @return
+     */
+    private int getDrawHeaderTop() {
+//        return 0;
+        return 0 + 50;
+    }
+
+    /**
+     * Header 가 그려지는 Rect 의 Width 값을 반환한다.
+     * @return
+     */
+    private int getDrawHeaderWidth() {
+        return getWidth();
+    }
+
+    /**
+     * Header 가 그려지는 Rect 의 Height 값을 반환한다.
+     * @return
+     */
+    private float getDrawHeaderHeight() {
+        return mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount();
+    }
+
+    /**
+     * Event 들이 그려지는 Rect 의 Left 값을 반환한다.
+     * @return
+     */
+    private float getDrawEventsLeft() {
+        return mHeaderColumnWidth;
+    }
+
+    /**
+     * Event 들이 그려지는 Rect 의 Top 값을 반환한다.
+     * @return
+     */
+    private float getDrawEventsTop() {
+        return getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom + mTimeTextHeight / 2;
+    }
+
+    /**
+     * Event 들이 그려지는 Rect 의 Width 값을 반환한다.
+     * @return
+     */
+    private int getDrawEventsWidth() {
+        return getWidth();
+    }
+
+    /**
+     * Event 들이 그려지는 Rect 의 Height 값을 반환한다.
+     * @return
+     */
+    private int getDrawEventHeight() {
+        return getHeight();
     }
 
     /////////////////////////////////////////////////////////////////
@@ -1435,6 +1502,7 @@ public class ScheduleView extends View {
 
     public void setViewMode(int viewMode, boolean refresh) {
         this.mViewMode = viewMode;
+        this.mFixedGroupHeader = null;
         this.setNumberOfVisibleDays(mCachedNumberOfVisible);
         if (refresh)
             notifyDatasetChanged();
@@ -1449,16 +1517,18 @@ public class ScheduleView extends View {
     }
 
     public void setFixedGroupHeader(GroupHeader fixedGroupHeader, boolean refresh) {
-        this.mFixedGroupHeader = fixedGroupHeader;
-        if (fixedGroupHeader != null) {
-            this.mNumberOfVisibleDays = mFixedGroupHeader.getSubHeaders().size();
-        } else {
-            this.mNumberOfVisibleDays = mCachedNumberOfVisible;
-        }
-        mCurrentOrigin.x = 0;
-        mCurrentOrigin.y = 0;
-        if (refresh) {
-            invalidate();
+        if (mViewMode == VIEW_CHILD) {
+            this.mFixedGroupHeader = fixedGroupHeader;
+            if (fixedGroupHeader != null) {
+                this.mNumberOfVisibleDays = mFixedGroupHeader.getSubHeaders().size();
+            } else {
+                this.mNumberOfVisibleDays = mCachedNumberOfVisible;
+            }
+            mCurrentOrigin.x = 0;
+            mCurrentOrigin.y = 0;
+            if (refresh) {
+                invalidate();
+            }
         }
     }
 
@@ -1719,8 +1789,8 @@ public class ScheduleView extends View {
         return mGroupHeaderClickListener;
     }
 
-    public void setGroupHeaderClickListener(GroupHeaderClickListener mGroupHeaderClickListener) {
-        this.mGroupHeaderClickListener = mGroupHeaderClickListener;
+    public void setGroupHeaderClickListener(GroupHeaderClickListener groupHeaderClickListener) {
+        this.mGroupHeaderClickListener = groupHeaderClickListener;
     }
 
     public void setScrollListener(ScrollListener scrolledListener) {
@@ -1841,9 +1911,12 @@ public class ScheduleView extends View {
     }
 
     private void getLoadBaseEventRect(float startFromPixel) {
+        if (getHeaderItems() == null)
+            return;
 
         ScheduleRect scheduleRect;
         RectF rectF;
+
         for (Header header : getHeaderItems()) {
             for (int i = 0; i < 24; i++) {
                 Calendar startTime = ScheduleViewUtil.today();
@@ -1856,13 +1929,11 @@ public class ScheduleView extends View {
 
                 // Calculate top.
                 float top = mHourHeight * 24 * (startTime.get(Calendar.HOUR_OF_DAY) * 60 + startTime.get(Calendar.MINUTE)) / 1440
-                        + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2
-                        + mHeaderMarginBottom + mTimeTextHeight / 2 + mEventMarginTop;
+                        + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
                 // Calculate bottom.
-                float bottom = mHourHeight * 24 * (endTime.get(Calendar.HOUR_OF_DAY) * 60 + endTime.get(Calendar.MINUTE)) / 1440
-                        + mCurrentOrigin.y + mHeaderHeight + mHeaderRowPadding * 2
-                        + mHeaderMarginBottom + mTimeTextHeight / 2 - mEventMarginBottom;
+                float bottom = mHourHeight * 24 * ((endTime.get(Calendar.DAY_OF_MONTH) - startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 + endTime.get(Calendar.HOUR_OF_DAY) * 60 + endTime.get(Calendar.MINUTE)) / 1440
+                        + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 
                 // Calculate left.
                 float left = startFromPixel + 0F * mWidthPerDay + mEventMarginLeft;
@@ -1876,7 +1947,7 @@ public class ScheduleView extends View {
 
                 // Draw the event and the event name on top of it.
                 if (left < right && left < getWidth() && top < getHeight() && right > mHeaderColumnWidth &&
-                        bottom > mHeaderHeight + mHeaderRowPadding * 2 + mTimeTextHeight / 2 + mHeaderMarginBottom) {
+                        bottom > getDrawEventsTop()) {
                     rectF = new RectF(left, top, right, bottom);
                 } else
                     rectF = null;
@@ -2145,8 +2216,8 @@ public class ScheduleView extends View {
         else if (hour > 0)
             verticalOffset = (int) (mHourHeight * hour);
 
-        if (verticalOffset > mHourHeight * 24 - getHeight() + mHeaderHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom)
-            verticalOffset = (int) (mHourHeight * 24 - getHeight() + mHeaderHeight + mHeaderRowPadding * 2 + mHeaderMarginBottom);
+        if (verticalOffset > mHourHeight * 24 - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)
+            verticalOffset = (int) (mHourHeight * 24 - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom);
 
         mCurrentOrigin.y = -verticalOffset;
         invalidate();

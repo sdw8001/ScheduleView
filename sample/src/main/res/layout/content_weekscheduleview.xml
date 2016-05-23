@@ -10,16 +10,6 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.github.sdw8001.sample.WeekScheduleViewActivity"
-    tools:showIn="@layout/activity_main">
-    <Button
-        android:id="@+id/Button_WeekView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/week_view_activity_name"/>
-    <Button
-        android:id="@+id/Button_ScheduleView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/schedule_view_activity_name"
-        android:layout_below="@id/Button_WeekView"/>
+    tools:showIn="@layout/activity_main"
+    android:id="@+id/container">
 </RelativeLayout>

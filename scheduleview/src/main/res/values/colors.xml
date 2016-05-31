@@ -3,6 +3,28 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="colorControlHighlight">#FF4081</color>
+    <color name="colorControlNormal">#FF4081</color>
+
+    <!-- Cyan_Indigo ColorSet -->
+    <color name="cyan_indigo_primary">#00BCD4</color>
+    <color name="cyan_indigo_primary_dark">#0097A7</color>
+    <color name="cyan_indigo_primary_light">#B2EBF2</color>
+    <color name="cyan_indigo_accent">#536DFE</color>
+    <color name="cyan_indigo_primary_text">#212121</color>
+    <color name="cyan_indigo_secondary_text">#727272</color>
+    <color name="cyan_indigo_icons">#FFFFFF</color>
+    <color name="cyan_indigo_divider">#B6B6B6</color>
+
+    <!-- Blue_Pink ColorSet -->
+    <color name="blue_pink_primary">#2196F3</color>
+    <color name="blue_pink_primary_dark">#1976D2</color>
+    <color name="blue_pink_primary_light">#BBDEFB</color>
+    <color name="blue_pink_accent">#FF4081</color>
+    <color name="blue_pink_primary_text">#212121</color>
+    <color name="blue_pink_secondary_text">#727272</color>
+    <color name="blue_pink_icons">#FFFFFF</color>
+    <color name="blue_pink_divider">#B6B6B6</color>
 
     <color name="event_color_01">#59dbe0</color>
     <color name="event_color_02">#f57f68</color>
@@ -10,5 +32,4 @@
     <color name="event_color_04">#f8b552</color>
     <color name="toolbar">#efefef</color>
     <color name="toolbar_text">#8f000000</color>
-    <color name="accent">#2789e4</color>
 </resources>

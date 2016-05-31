@@ -29,27 +29,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        findViewById(R.id.Button_WeekView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, WeekViewActivity.class);
-                startActivity(intent);
-            }
-        });
-
         findViewById(R.id.Button_ScheduleView).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MainActivity.this, ScheduleViewActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        findViewById(R.id.Button_WeekScheduleView).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, WeekScheduleViewActivity.class);
                 startActivity(intent);
             }
         });

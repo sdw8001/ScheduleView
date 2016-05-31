@@ -16,13 +16,16 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import com.github.sdw8001.scheduleview.WeekViewUtil;
+import com.android.datetimepicker.date.DatePickerDialog;
 import com.github.sdw8001.scheduleview.event.ScheduleViewEvent;
 import com.github.sdw8001.scheduleview.header.GroupHeader;
 import com.github.sdw8001.scheduleview.header.Header;
+import com.github.sdw8001.scheduleview.listener.CalendarListener;
 import com.github.sdw8001.scheduleview.loader.ScheduleLoader;
 import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
 import com.github.sdw8001.scheduleview.view.ScheduleView;
+
+import org.joda.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -32,10 +35,18 @@ import java.util.List;
  * Created by sdw80 on 2016-04-21.
  */
 public class ScheduleViewActivity extends AppCompatActivity
-        implements ScheduleLoader.ScheduleLoadListener, ScheduleView.EventDrawListener, ScheduleView.EventClickListener, ScheduleView.EventLongPressListener, ScheduleView.EmptyViewClickListener, ScheduleView.GroupHeaderClickListener{
+        implements ScheduleLoader.ScheduleLoadListener,
+        ScheduleView.EventDrawListener,
+        ScheduleView.EventClickListener,
+        ScheduleView.EventLongPressListener,
+        ScheduleView.EmptyViewClickListener,
+        ScheduleView.GroupHeaderClickListener,
+        DatePickerDialog.OnDateSetListener{
 
     private List<AppointmentEvent> mAppointmentList;
     private ScheduleView mScheduleView;
+    private CalendarListener mCalendarListener;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +76,27 @@ public class ScheduleViewActivity extends AppCompatActivity
         mScheduleView.setEmptyViewClickListener(this);
         mScheduleView.setGroupHeaderClickListener(this);
         mScheduleView.setFloatingActionButton(fab);
+
+
+        if (mCalendarListener == null) {
+            mCalendarListener = new CalendarListener() {
+                @Override
+                public void onSelectPicker() {
+                    //User can use any type of pickers here the below picker is only Just a example
+                    DatePickerDialog.newInstance(ScheduleViewActivity.this,
+                            Calendar.getInstance().get(Calendar.YEAR),
+                            Calendar.getInstance().get(Calendar.MONTH),
+                            Calendar.getInstance().get(Calendar.DAY_OF_MONTH)).show(getFragmentManager(), "date_picker");
+                }
+
+                @Override
+                public void onSelectDate(LocalDateTime selectedDate) {
+                    //callback when a date is selected
+//                    mDateSelectedTv.setText("" + selectedDate.getDayOfMonth() + "-" + selectedDate.getMonthOfYear() + "-" + selectedDate.getYear());
+                }
+            };
+        }
+        mScheduleView.setCalendarListener(mCalendarListener);
 
         List<DoctorHeader> doctorHeaders = new ArrayList<>();
         List<GroupHeader> headers = new ArrayList<>();
@@ -136,8 +168,8 @@ public class ScheduleViewActivity extends AppCompatActivity
     }
 
     @Override
-    public List<? extends ScheduleViewEvent> onScheduleLoad() {
-
+    public List<? extends ScheduleViewEvent> onScheduleLoad(Calendar dateCalendar) {
+        Toast.makeText(this, dateCalendar.get(Calendar.YEAR) + "년" + (dateCalendar.get(Calendar.MONTH) + 1) + "월" + dateCalendar.get(Calendar.DAY_OF_MONTH) + "일 onScheduleLoad", Toast.LENGTH_SHORT).show();
         if (mAppointmentList == null)
             mAppointmentList = new ArrayList<>();
 
@@ -552,5 +584,11 @@ public class ScheduleViewActivity extends AppCompatActivity
 
             Toast.makeText(this, groupHeader.getHeaderName(), Toast.LENGTH_SHORT).show();
         }
+    }
+    @Override
+    public void onDateSet(DatePickerDialog dialog, int year, int monthOfYear, int dayOfMonth) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(year, monthOfYear, dayOfMonth);
+        mScheduleView.setFocusedWeekDate(calendar, true);//Sets the selected date from Picker
     }
 }

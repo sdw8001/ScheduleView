@@ -1,4 +1,4 @@
-package com.github.sdw8001.scheduleview;
+package com.github.sdw8001.scheduleview.interpreter;
 
 import java.util.Calendar;
 
@@ -7,5 +7,7 @@ import java.util.Calendar;
  */
 public interface DateTimeInterpreter {
     String interpretDate(Calendar date);
+    String interpretDayOfMonth(Calendar date);
+    String interpretDayOfWeek(Calendar date);
     String interpretTime(int hour);
 }

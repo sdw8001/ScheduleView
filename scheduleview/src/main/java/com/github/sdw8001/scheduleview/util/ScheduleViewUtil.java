@@ -101,4 +101,19 @@ public class ScheduleViewUtil {
         today.set(Calendar.MILLISECOND, 0);
         return today;
     }
+
+    /**
+     * <pre>
+     * Returns a calendar instance at the start of this day
+     * </pre>
+     *
+     * @return the calendar instance
+     */
+    public static Calendar resetDay(Calendar calendar){
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        return calendar;
+    }
 }

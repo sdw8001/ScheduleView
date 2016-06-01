@@ -16,6 +16,7 @@
         android:id="@+id/scheduleView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:foreground="?android:attr/selectableItemBackground"
         app:columnGap="3dp"
         app:dayBackgroundColor="#05000000"
         app:eventCornerRadius="8dp"

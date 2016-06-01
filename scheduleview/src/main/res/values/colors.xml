@@ -10,6 +10,7 @@
     <color name="cyan_indigo_primary">#00BCD4</color>
     <color name="cyan_indigo_primary_dark">#0097A7</color>
     <color name="cyan_indigo_primary_light">#B2EBF2</color>
+    <color name="cyan_indigo_color_control_highlight">#9FA8DA</color>
     <color name="cyan_indigo_accent">#536DFE</color>
     <color name="cyan_indigo_primary_text">#212121</color>
     <color name="cyan_indigo_secondary_text">#727272</color>
@@ -20,6 +21,7 @@
     <color name="blue_pink_primary">#2196F3</color>
     <color name="blue_pink_primary_dark">#1976D2</color>
     <color name="blue_pink_primary_light">#BBDEFB</color>
+    <color name="blue_pink_color_control_highlight">#F48FB1</color>
     <color name="blue_pink_accent">#FF4081</color>
     <color name="blue_pink_primary_text">#212121</color>
     <color name="blue_pink_secondary_text">#727272</color>

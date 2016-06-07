@@ -2545,6 +2545,9 @@ public class ScheduleView extends View {
      * @param events The events to be sorted and cached.
      */
     private void sortAndCacheEvents(List<? extends ScheduleViewEvent> events) {
+        if (events == null)
+            return;
+
         sortEvents(events);
         for (ScheduleViewEvent event : events) {
             cacheEvent(event);

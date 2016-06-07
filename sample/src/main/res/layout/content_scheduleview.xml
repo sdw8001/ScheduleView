@@ -16,10 +16,9 @@
         android:id="@+id/scheduleView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:elevation="1dp"
         android:layout_margin="1dp"
+        android:elevation="1dp"
         app:columnGap="3dp"
-        app:weekDateVisible="false"
         app:dayBackgroundColor="#05000000"
         app:eventCornerRadius="8dp"
         app:eventMarginBottom="1dp"
@@ -45,5 +44,6 @@
         app:noOfVisibleDays="3"
         app:textSize="12sp"
         app:todayBackgroundColor="#1848adff"
-        app:todayHeaderTextColor="@color/accent" />
+        app:todayHeaderTextColor="@color/accent"
+        app:weekDateVisible="true" />
 </RelativeLayout>

@@ -135,7 +135,7 @@ public class ScheduleViewActivity extends AppCompatActivity
 
         mScheduleView.setGroupHeaderItems(headers);
         mScheduleView.setViewMode(ScheduleView.VIEW_CHILD, false);
-        mScheduleView.notifyDatasetChanged();
+        mScheduleView.notifyDataSetChanged();
     }
 
     @Override
@@ -508,7 +508,7 @@ public class ScheduleViewActivity extends AppCompatActivity
             } else {
                 this.mScheduleView.setFixedGroupHeader(null);
             }
-            this.mScheduleView.notifyDatasetChanged();
+            this.mScheduleView.notifyDataSetChanged();
 
             Toast.makeText(this, groupHeader.getHeaderName(), Toast.LENGTH_SHORT).show();
         }

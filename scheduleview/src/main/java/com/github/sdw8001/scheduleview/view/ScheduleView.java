@@ -529,25 +529,6 @@ public class ScheduleView extends View {
                 return true;
             }
         });
-
-//        if (mCalendarListener == null) {
-//            mCalendarListener = new CalendarListener() {
-//                @Override
-//                public void onSelectPicker() {
-//                    //User can use any type of pickers here the below picker is only Just a example
-//                    DatePickerDialog.newInstance(null,
-//                            Calendar.getInstance().get(Calendar.YEAR),
-//                            Calendar.getInstance().get(Calendar.MONTH),
-//                            Calendar.getInstance().get(Calendar.DAY_OF_MONTH)).show(((Activity)mContext).getFragmentManager(), "date_picker");
-//                }
-//
-//                @Override
-//                public void onSelectDate(LocalDateTime selectedDate) {
-//                    //callback when a date is selcted
-////                    mDateSelectedTv.setText("" + selectedDate.getDayOfMonth() + "-" + selectedDate.getMonthOfYear() + "-" + selectedDate.getYear());
-//                }
-//            };
-//        }
     }
 
     private void initTextTimeWidth() {
@@ -1944,7 +1925,19 @@ public class ScheduleView extends View {
         this.mFixedGroupHeader = null;
         this.setNumberOfVisibleDays(mCachedNumberOfVisible);
         if (refresh)
-            notifyDatasetChanged();
+            notifyDataSetChanged();
+    }
+
+    public List<? extends ScheduleViewEvent> getCurrentEvents() {
+        return mCurrentEvents;
+    }
+
+    public void setCurrentEvents(List<? extends ScheduleViewEvent> currentEvents) {
+        if (mCurrentEvents != null) {
+            mCurrentEvents.clear();
+            mCurrentEvents = null;
+        }
+        this.mCurrentEvents = currentEvents;
     }
 
     public GroupHeader getFixedGroupHeader() {
@@ -2726,7 +2719,7 @@ public class ScheduleView extends View {
     /**
      * Refreshes the view and loads the events again.
      */
-    public void notifyDatasetChanged() {
+    public void notifyDataSetChanged() {
         mRefreshEvents = true;
         invalidate();
     }

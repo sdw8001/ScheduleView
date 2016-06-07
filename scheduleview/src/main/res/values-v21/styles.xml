@@ -6,6 +6,9 @@
         <item name="colorPrimaryDark">@color/cyan_indigo_primary_dark</item>
         <item name="colorAccent">@color/cyan_indigo_accent</item>
         <item name="colorControlHighlight">@color/cyan_indigo_color_control_highlight</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
     <style name="Theme.BluePink.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar" >
@@ -13,6 +16,9 @@
         <item name="colorPrimaryDark">@color/blue_pink_primary_dark</item>
         <item name="colorAccent">@color/blue_pink_accent</item>
         <item name="colorControlHighlight">@color/blue_pink_color_control_highlight</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowTranslucentStatus">true</item>
     </style>
 
 </resources>

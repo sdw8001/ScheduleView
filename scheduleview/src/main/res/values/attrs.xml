@@ -62,6 +62,7 @@
     <attr name="cellFocusable" format="boolean" />
     <attr name="horizontalFlingEnabled" format="boolean" />
     <attr name="verticalFlingEnabled" format="boolean" />
+    <attr name="weekDateVisible" format="boolean" />
     <attr name="allDayEventHeight" format="dimension" />
     <attr name="scrollDuration" format="integer" />
     <attr name="headerType" format="enum">
@@ -166,6 +167,7 @@
         <attr name="cellFocusable" />
         <attr name="horizontalFlingEnabled" />
         <attr name="verticalFlingEnabled" />
+        <attr name="weekDateVisible" />
         <attr name="allDayEventHeight" />
         <attr name="scrollDuration" />
         <attr name="headerType" />

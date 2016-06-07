@@ -19,6 +19,7 @@
         android:elevation="1dp"
         android:layout_margin="1dp"
         app:columnGap="3dp"
+        app:weekDateVisible="false"
         app:dayBackgroundColor="#05000000"
         app:eventCornerRadius="8dp"
         app:eventMarginBottom="1dp"

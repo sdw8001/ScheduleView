@@ -98,7 +98,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         }
         mScheduleView.setCalendarListener(mCalendarListener);
 
-        List<DoctorHeader> doctorHeaders = new ArrayList<>();
         List<GroupHeader> headers = new ArrayList<>();
         DoctorHeader doctorHeader;
 
@@ -109,7 +108,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "권한자", "00000235", "5", "5"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "권한자", "00000235", "6", "6"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "권한자", "00000235", "1", "1->2"));
-        doctorHeaders.add(doctorHeader);
         headers.add(doctorHeader.getGroupHeader());
 
         doctorHeader = new DoctorHeader(ScheduleViewUtil.today(), "00000023", "나의사", "02");
@@ -119,7 +117,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "나의사", "00000023", "2", "4"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "나의사", "00000023", "1", "5"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "나의사", "00000023", "3", "6"));
-        doctorHeaders.add(doctorHeader);
         headers.add(doctorHeader.getGroupHeader());
 
         doctorHeader = new DoctorHeader(ScheduleViewUtil.today(), "00000228", "덴탑", "03");
@@ -127,7 +124,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "덴탑", "00000228", "2", "2"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "덴탑", "00000228", "3", "3"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "덴탑", "00000228", "4", "4"));
-        doctorHeaders.add(doctorHeader);
         headers.add(doctorHeader.getGroupHeader());
 
         doctorHeader = new DoctorHeader(ScheduleViewUtil.today(), "00000181", "새코디", "04");
@@ -135,7 +131,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "새코디", "00000181", "2", "2"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "새코디", "00000181", "3", "3"));
         doctorHeader.getSubHeaders().add(new Header(ScheduleViewUtil.today(), "새코디", "00000181", "4", "4"));
-        doctorHeaders.add(doctorHeader);
         headers.add(doctorHeader.getGroupHeader());
 
         mScheduleView.setGroupHeaderItems(headers);
@@ -428,73 +423,6 @@ public class ScheduleViewActivity extends AppCompatActivity
         mAppointmentList.add(appointmentEvent);
         matchedEvents.add(appointmentEvent.toScheduleViewEvent());
 
-        /*
-        // Return only the events that matches newYear and newMonth.
-        Calendar now = Calendar.getInstance();
-        Calendar startTime, endTime;
-        List<ScheduleViewEvent> matchedEvents = new ArrayList<ScheduleViewEvent>();
-        ScheduleViewEvent event;
-
-        event = new ScheduleViewEvent();
-        startTime = (Calendar) now.clone();
-        startTime.set(Calendar.YEAR, 2016);
-        startTime.set(Calendar.MONTH, 04);
-        startTime.set(Calendar.DAY_OF_MONTH, 26);
-        startTime.set(Calendar.HOUR_OF_DAY, 12);
-        startTime.set(Calendar.MINUTE, 30);
-        endTime = (Calendar) startTime.clone();
-        endTime.set(Calendar.YEAR, 2016);
-        endTime.set(Calendar.MONTH, 04);
-        endTime.set(Calendar.DAY_OF_MONTH, 26);
-        endTime.set(Calendar.HOUR_OF_DAY, 14);
-        endTime.set(Calendar.MINUTE, 0);
-        event.setStartTime(startTime);
-        event.setEndTime(endTime);
-        event.setHeaderKey("00000023");
-        event.setSplitUsing(ScheduleViewEvent.SPLIT_USING_KEY);
-        event.setBackgroundColor(Color.WHITE);
-        matchedEvents.add(event);
-
-        event = new ScheduleViewEvent();
-        startTime = (Calendar) now.clone();
-        startTime.set(Calendar.YEAR, 2016);
-        startTime.set(Calendar.MONTH, 04);
-        startTime.set(Calendar.DAY_OF_MONTH, 26);
-        startTime.set(Calendar.HOUR_OF_DAY, 12);
-        startTime.set(Calendar.MINUTE, 30);
-        endTime = (Calendar) startTime.clone();
-        endTime.set(Calendar.YEAR, 2016);
-        endTime.set(Calendar.MONTH, 04);
-        endTime.set(Calendar.DAY_OF_MONTH, 26);
-        endTime.set(Calendar.HOUR_OF_DAY, 13);
-        endTime.set(Calendar.MINUTE, 30);
-        event.setStartTime(startTime);
-        event.setEndTime(endTime);
-        event.setHeaderKey("00000235");
-        event.setSplitUsing(ScheduleViewEvent.SPLIT_USING_KEY);
-        event.setBackgroundColor(Color.YELLOW);
-        matchedEvents.add(event);
-
-        event = new ScheduleViewEvent();
-        startTime = (Calendar) now.clone();
-        startTime.set(Calendar.YEAR, 2016);
-        startTime.set(Calendar.MONTH, 04);
-        startTime.set(Calendar.DAY_OF_MONTH, 26);
-        startTime.set(Calendar.HOUR_OF_DAY, 12);
-        startTime.set(Calendar.MINUTE, 30);
-        endTime = (Calendar) startTime.clone();
-        endTime.set(Calendar.YEAR, 2016);
-        endTime.set(Calendar.MONTH, 04);
-        endTime.set(Calendar.DAY_OF_MONTH, 26);
-        endTime.set(Calendar.HOUR_OF_DAY, 13);
-        endTime.set(Calendar.MINUTE, 0);
-        event.setStartTime(startTime);
-        event.setEndTime(endTime);
-        event.setHeaderKey("00000235");
-        event.setSplitUsing(ScheduleViewEvent.SPLIT_USING_KEY);
-        event.setBackgroundColor(Color.RED);
-        matchedEvents.add(event);
-*/
         return matchedEvents;
     }
 

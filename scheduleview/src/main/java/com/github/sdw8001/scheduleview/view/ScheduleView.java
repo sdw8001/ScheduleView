@@ -226,6 +226,7 @@ public class ScheduleView extends View {
     private boolean mVerticalFlingEnabled = true;
     private boolean mShowDistinctWeekendColor = false;
     private boolean mShowDistinctPastFutureColor = false;
+    private boolean mWeekDateVisible = false;
     private int mViewMode = VIEW_PARENT;
     private Calendar mScrollToDay = null;
     private double mScrollToHour = -1;
@@ -347,6 +348,7 @@ public class ScheduleView extends View {
             mHeaderRowShadowEnabled = a.getBoolean(R.styleable.ScheduleView_headerRowShadowEnabled, mHeaderRowShadowEnabled);
             mHorizontalFlingEnabled = a.getBoolean(R.styleable.ScheduleView_horizontalFlingEnabled, mHorizontalFlingEnabled);
             mVerticalFlingEnabled = a.getBoolean(R.styleable.ScheduleView_verticalFlingEnabled, mVerticalFlingEnabled);
+            mWeekDateVisible = a.getBoolean(R.styleable.ScheduleView_weekDateVisible, mWeekDateVisible);
             mAllDayEventHeight = a.getDimensionPixelSize(R.styleable.ScheduleView_allDayEventHeight, mAllDayEventHeight);
             mScrollDuration = a.getInt(R.styleable.ScheduleView_scrollDuration, mScrollDuration);
             mHeaderType = a.getInteger(R.styleable.ScheduleView_headerType, mHeaderType);
@@ -935,7 +937,8 @@ public class ScheduleView extends View {
         drawTimeColumnAndAxes(canvas);
 
         // WeekDateSeeker 를 그린다.
-        drawWeekCalendar(canvas);
+        if (mWeekDateVisible)
+            drawWeekCalendar(canvas);
     }
 
     private void drawWeekCalendar(Canvas canvas) {
@@ -1190,10 +1193,6 @@ public class ScheduleView extends View {
             startFromPixel = mCurrentOrigin.x + (mWidthPerDay + mColumnGap) * leftDaysWithGaps + mHeaderColumnWidth;
             startPixel = startFromPixel;
         }
-
-        // 각 일자를 iterate 하기위해 준비
-//        Calendar day = (Calendar) today.clone();
-//        day.add(Calendar.HOUR, 6);
 
         // 각 시간에 구분선을 그리기 위해 준비
         int lineCount = (int) ((getHeight() - (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)) / mHourHeight) + 1;
@@ -1710,7 +1709,10 @@ public class ScheduleView extends View {
      * @return ScheduleView 의 Header 가 그려질 Rect 영역의 Top 값.
      */
     private int getDrawHeaderTop() {
-        return (int) mWeekDateSeekerHeight;
+        if (mWeekDateVisible)
+            return (int) mWeekDateSeekerHeight;
+        else
+            return 0;
     }
 
     /**
@@ -1777,9 +1779,9 @@ public class ScheduleView extends View {
     public boolean onTouchEvent(MotionEvent event) {
         boolean val;
         if (event.getAction() == MotionEvent.ACTION_DOWN && mTouchedKind == TouchedKind.NONE_TOUCH) {
-            if (mWeekSeekerGestureRect.contains(event.getX(), event.getY()))
+            if (mWeekDateVisible && mWeekSeekerGestureRect.contains(event.getX(), event.getY()))
                 mTouchedKind = TouchedKind.WEEK_DATE_SEEKER_AREA;
-            else if (mCurrentDateRect.contains(event.getX(), event.getY()))
+            else if (mWeekDateVisible && mCurrentDateRect.contains(event.getX(), event.getY()))
                 mTouchedKind = TouchedKind.WEEK_CURRENT_DATE_AREA;
             else
                 mTouchedKind = TouchedKind.SCHEDULE_AREA;

@@ -41,7 +41,7 @@ public class DoctorHeader extends GroupHeader {
     }
 
     public DoctorHeader(Calendar calendar, String doctorId, String doctorName, String seq) {
-        super(calendar, null, null, doctorId, doctorName, new ArrayList<Header>());
+        super(calendar, null, null, doctorName, doctorId, new ArrayList<Header>());
         this.setCalendar(calendar);
         this.setDoctorId(doctorId);
         this.setDoctorName(doctorName);

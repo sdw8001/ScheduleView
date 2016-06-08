@@ -1937,7 +1937,16 @@ public class ScheduleView extends View {
             mCurrentEvents.clear();
             mCurrentEvents = null;
         }
-        this.mCurrentEvents = currentEvents;
+
+        if (mEventRects == null)
+            mEventRects = new ArrayList<>();
+
+        // Clear events.
+        mEventRects.clear();
+        sortAndCacheEvents(currentEvents);
+        calculateHeaderHeight();
+
+        mCurrentEvents = currentEvents;
     }
 
     public GroupHeader getFixedGroupHeader() {

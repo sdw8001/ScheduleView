@@ -1391,6 +1391,13 @@ public class ScheduleView extends View {
             return null;
 
         if (mFixedGroupHeader != null) {
+            // FixedGroupHeader 와 groupHeader 가 참조는 다르지만 값이 같으면 대체하여 반환.
+            for (GroupHeader groupHeader : mGroupHeaderItems) {
+                if (mFixedGroupHeader != groupHeader && mFixedGroupHeader.equals(groupHeader)) {
+                    mFixedGroupHeader = groupHeader;
+                    break;
+                }
+            }
             return mFixedGroupHeader;
         } else {
             for (GroupHeader groupHeader : mGroupHeaderItems) {

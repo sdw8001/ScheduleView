@@ -29,12 +29,41 @@ public class Header implements Serializable {
         this.calendar = null;
         this.headerName = null;
     }
+
     public Header(Calendar calendar, String parentHeaderName, String parentHeaderKey, String headerKey, String headerName) {
         this.parentHeaderKey = parentHeaderKey;
         this.parentHeaderName = parentHeaderName;
         this.headerKey = headerKey;
         this.headerName = headerName;
         this.calendar = calendar;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Header header = (Header) o;
+
+        if (parentHeaderKey != null ? !parentHeaderKey.equals(header.parentHeaderKey) : header.parentHeaderKey != null)
+            return false;
+        if (parentHeaderName != null ? !parentHeaderName.equals(header.parentHeaderName) : header.parentHeaderName != null)
+            return false;
+        if (headerKey != null ? !headerKey.equals(header.headerKey) : header.headerKey != null)
+            return false;
+        if (headerName != null ? !headerName.equals(header.headerName) : header.headerName != null)
+            return false;
+        return calendar != null ? calendar.equals(header.calendar) : header.calendar == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = parentHeaderKey != null ? parentHeaderKey.hashCode() : 0;
+        result = 31 * result + (parentHeaderName != null ? parentHeaderName.hashCode() : 0);
+        result = 31 * result + (headerKey != null ? headerKey.hashCode() : 0);
+        result = 31 * result + (headerName != null ? headerName.hashCode() : 0);
+        result = 31 * result + (calendar != null ? calendar.hashCode() : 0);
+        return result;
     }
 
     public String getHeaderKey() {

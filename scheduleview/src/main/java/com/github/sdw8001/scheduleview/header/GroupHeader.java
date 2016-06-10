@@ -26,6 +26,24 @@ public class GroupHeader extends Header implements Serializable {
         this.subHeaders = subHeaders;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        GroupHeader that = (GroupHeader) o;
+
+        return subHeaders != null ? subHeaders.equals(that.subHeaders) : that.subHeaders == null;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + (subHeaders != null ? subHeaders.hashCode() : 0);
+        return result;
+    }
+
     public List<Header> getSubHeaders() {
         return subHeaders;
     }

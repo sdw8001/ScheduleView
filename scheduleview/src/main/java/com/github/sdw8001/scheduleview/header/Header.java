@@ -1,11 +1,12 @@
 package com.github.sdw8001.scheduleview.header;
 
+import java.io.Serializable;
 import java.util.Calendar;
 
 /**
  * Created by sdw80 on 2016-04-22.
  */
-public class Header {
+public class Header implements Serializable {
 
     /**
      * Header 의 종류가 Calendar 의 Date

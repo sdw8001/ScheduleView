@@ -2,13 +2,14 @@ package com.github.sdw8001.scheduleview.header;
 
 import android.graphics.RectF;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.List;
 
 /**
  * Created by sdw80 on 2016-05-03.
  */
-public class GroupHeader extends Header {
+public class GroupHeader extends Header implements Serializable {
     private List<Header> subHeaders;
     private RectF rectF;
 

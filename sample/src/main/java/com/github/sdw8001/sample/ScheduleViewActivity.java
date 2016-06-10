@@ -41,6 +41,9 @@ public class ScheduleViewActivity extends AppCompatActivity
         ScheduleView.DateCalendarListener,
         DatePickerDialog.OnDateSetListener {
 
+    private final static String SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE = "SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE";
+    private final static String SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER = "SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER";
+
     private List<AppointmentEvent> mAppointmentList;
     private ScheduleView mScheduleView;
 
@@ -113,6 +116,20 @@ public class ScheduleViewActivity extends AppCompatActivity
         mScheduleView.setGroupHeaderItems(headers);
         mScheduleView.setViewMode(ScheduleView.VIEW_CHILD, false);
         mScheduleView.notifyDataSetChanged();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE, mScheduleView.getFocusedWeekDate());
+        outState.putSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER, mScheduleView.getFixedGroupHeader());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        mScheduleView.setFocusedWeekDate((Calendar)savedInstanceState.getSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE), false);
+        mScheduleView.setFixedGroupHeader((GroupHeader) savedInstanceState.getSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER));
     }
 
     @Override

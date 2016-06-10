@@ -11,4 +11,9 @@
         android:orderInCategory="100"
         android:title="체어별"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_showDatePicker"
+        android:orderInCategory="100"
+        android:title="달력"
+        app:showAsAction="never" />
 </menu>

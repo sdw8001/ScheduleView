@@ -46,7 +46,6 @@ import com.github.sdw8001.scheduleview.header.GroupHeader;
 import com.github.sdw8001.scheduleview.header.Header;
 import com.github.sdw8001.scheduleview.interpreter.DateTimeInterpreter;
 import com.github.sdw8001.scheduleview.interpreter.HeaderInterpreter;
-import com.github.sdw8001.scheduleview.listener.CalendarListener;
 import com.github.sdw8001.scheduleview.loader.ScheduleLoader;
 import com.github.sdw8001.scheduleview.loader.ScheduleViewLoader;
 import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
@@ -249,7 +248,7 @@ public class ScheduleView extends View {
     private ScheduleViewLoader mScheduleViewLoader;
     private ScrollListener mScrollListener;
     private EventDrawListener mEventDrawListener;
-    private CalendarListener mCalendarListener;
+    private DateCalendarListener mDateCalendarListener;
 
     /////////////////////////////////////////////////////////////////
     //
@@ -445,7 +444,7 @@ public class ScheduleView extends View {
         mHeaderBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mHeaderBackgroundPaint.setColor(mHeaderRowBackgroundColor);
         if (mHeaderRowShadowEnabled) {
-            mHeaderBackgroundPaint.setShadowLayer(mHeaderRowShadowRadius, 0, 0, Color.GRAY);
+            mHeaderBackgroundPaint.setShadowLayer(mHeaderRowShadowRadius, 0, 0, Color.LTGRAY);
             this.setLayerType(LAYER_TYPE_SOFTWARE, mHeaderBackgroundPaint);
         }
 
@@ -678,11 +677,12 @@ public class ScheduleView extends View {
 
             // if 내부는 GroupHeaderClickListener 에 이벤트를 전달하는 역할
             if (mGroupHeaderClickListener != null && mGroupHeaderItems != null) {
-                for (GroupHeader groupHeader : mGroupHeaderItems) {
+                // mGroupHeaderItem 의 RectF 가 화면에 여러개 노출될때 마지막 노출된 GroupHeader 의 RectF 만 올바르게 RectF 설정이 되어서 뒤에서부터 체크
+                for (int i = mGroupHeaderItems.size() - 1; i >= 0; i--) {
                     // TouchPoint 가 GroupHeader 의 RectF 에 포함되면 이벤트 전달.
-                    if (groupHeader.getRectF() != null && groupHeader.getRectF().contains(e.getX(), e.getY())) {
+                    if (mGroupHeaderItems.get(i).getRectF() != null && mGroupHeaderItems.get(i).getRectF().contains(e.getX(), e.getY())) {
                         playSoundEffect(SoundEffectConstants.CLICK);
-                        mGroupHeaderClickListener.onGroupHeaderClicked(groupHeader);
+                        mGroupHeaderClickListener.onGroupHeaderClicked(mGroupHeaderItems.get(i));
                         invalidate();
                         return super.onSingleTapConfirmed(e);
                     }
@@ -842,9 +842,9 @@ public class ScheduleView extends View {
             }
 
             // if 내부는 mCalendarListener 에 이벤트를 전달하는 역할, TouchPoint 가 EventRect 에 포함되면
-            if (mCurrentDateRect != null && mCalendarListener != null && mCurrentDateRect.contains(e.getX(), e.getY())) {
+            if (mCurrentDateRect != null && mDateCalendarListener != null && mCurrentDateRect.contains(e.getX(), e.getY())) {
                 // CalendarListener 에 onSelectPicker 이벤트를 전달하고
-                mCalendarListener.onSelectPicker();
+                mDateCalendarListener.onSelectPicker(mFocusedWeekDate);
 
                 // 기기에 SoundEffect Click 효과를 수행한다.
                 playSoundEffect(SoundEffectConstants.CLICK);
@@ -896,6 +896,7 @@ public class ScheduleView extends View {
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     private class CustomOutline extends ViewOutlineProvider {
         int width, height;
+
         CustomOutline(int width, int height) {
             this.width = width;
             this.height = height;
@@ -910,6 +911,7 @@ public class ScheduleView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        mCurrentDateRect = null;
 
         // Schedule Header 와 Event 를 그린다.
         drawHeaderRowAndEvents(canvas);
@@ -951,14 +953,12 @@ public class ScheduleView extends View {
                 (int) mWeekDateYearMonthWidth - mWeekDateSeekerTextPadding * 2 : (int) mWeekDateSeekerWidth - mWeekDateSeekerTextPadding * 2;
         int year, month, dayOfMonth;
         if (mFocusedWeekDate == null) {
-            year = today.get(Calendar.YEAR);
-            month = today.get(Calendar.MONTH);
-            dayOfMonth = today.get(Calendar.DAY_OF_MONTH);
-        } else {
-            year = mFocusedWeekDate.get(Calendar.YEAR);
-            month = mFocusedWeekDate.get(Calendar.MONTH);
-            dayOfMonth = mFocusedWeekDate.get(Calendar.DAY_OF_MONTH);
+            mFocusedWeekDate = ScheduleViewUtil.today();
         }
+        year = mFocusedWeekDate.get(Calendar.YEAR);
+        month = mFocusedWeekDate.get(Calendar.MONTH);
+        dayOfMonth = mFocusedWeekDate.get(Calendar.DAY_OF_MONTH);
+
         StaticLayout textLayout = new StaticLayout(year + "\n" + (month + 1) + "월 " + dayOfMonth + "일",
                 mWeekDateYearMonthTextPaint,
                 textLayoutWidth,
@@ -1167,9 +1167,9 @@ public class ScheduleView extends View {
         }
 
         // mCurrentOrigin.x 값이 HeaderViewList 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mGroupHeaderItems != null && leftDaysWithGaps + mNumberOfVisibleDays > getHeaderItemSize() - 1) {
+        if (mGroupHeaderItems != null && leftDaysWithGaps + mNumberOfVisibleDays > getHeaderItemSize() - 1 && getHeaderItemSize() - mNumberOfVisibleDays >= 0) {
             leftDaysWithGaps = getHeaderItemSize() - mNumberOfVisibleDays;
-            mCurrentOrigin.x = -((getHeaderItemSize() - mNumberOfVisibleDays) * (mWidthPerDay + mColumnGap));
+            mCurrentOrigin.x = -(leftDaysWithGaps * (mWidthPerDay + mColumnGap));
             mScroller.forceFinished(true);
             startFromPixel = mCurrentOrigin.x + (mWidthPerDay + mColumnGap) * leftDaysWithGaps + mHeaderColumnWidth;
             startPixel = startFromPixel;
@@ -1216,9 +1216,9 @@ public class ScheduleView extends View {
             // getMoreEvents(Calendar) 에서 GetLoadEvents() 로 변경합니다. Scroll 이벤트로 추가적으로 Load 되는 방식이 아닌 일괄 Load 방식을 사용합니다.
             if (mEventRects == null || mRefreshEvents) {
                 if (mFocusedWeekDate == null)
-                    getLoadEvents(ScheduleViewUtil.today());
-                else
-                    getLoadEvents(mFocusedWeekDate);
+                    mFocusedWeekDate = ScheduleViewUtil.today();
+
+                getLoadEvents(mFocusedWeekDate);
                 mRefreshEvents = false;
             }
 
@@ -1257,15 +1257,56 @@ public class ScheduleView extends View {
             canvas.drawRoundRect(getFocusedEmptyScheduleRect().rectF, mEventCornerRadius, mEventCornerRadius, mFocusedEmptyEventPaint);
         }
 
-//        // 왼쪽 상단의 첫 Cell 배경색을 HeaderBackground 색으로 그린다.(Cell 숨김 목적)
-//        canvas.clipRect(0, 0, mTimeTextWidth + mHeaderColumnPadding * 2, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), Region.Op.REPLACE);
-//        canvas.drawRect(0, 0, mTimeTextWidth + mHeaderColumnPadding * 2, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderBackgroundPaint);
+        // 현재 일자 표시 그리기 (왼쪽 상단의 첫 Cell) WeekDateVisible 이 false 일 때만 현재 년월일 표시
+        if (!mWeekDateVisible) {
+            canvas.clipRect(0, 0, mTimeTextWidth + mHeaderColumnPadding * 2 - 1, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), Region.Op.REPLACE);
+            canvas.drawRect(0, 0, mTimeTextWidth + mHeaderColumnPadding * 2 - 1, mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderBackgroundPaint);
+            int textLayoutWidth = (int) mTimeTextWidth + mHeaderColumnPadding * 2 - 1;
+            int year, month, dayOfMonth;
+            if (mFocusedWeekDate == null)
+                mFocusedWeekDate = ScheduleViewUtil.today();
+
+            year = mFocusedWeekDate.get(Calendar.YEAR);
+            month = mFocusedWeekDate.get(Calendar.MONTH);
+            dayOfMonth = mFocusedWeekDate.get(Calendar.DAY_OF_MONTH);
+
+            StaticLayout textLayout = new StaticLayout(year + "\n" + (month + 1) + "월 " + dayOfMonth + "일",
+                    mWeekDateYearMonthTextPaint,
+                    textLayoutWidth,
+                    Layout.Alignment.ALIGN_CENTER, 1.0f, 1.0f, false);
+
+            int startPointY = getDrawHeaderTop() + ((int) getDrawHeaderHeight() - textLayout.getHeight()) / 2;
+
+            float textMaxWidth = 0;
+
+            // textLayout 의 Max LineWidth 구하기
+            for (int i = 0; i < textLayout.getLineCount(); i++) {
+                if (textLayout.getLineWidth(i) > textMaxWidth)
+                    textMaxWidth = textLayout.getLineWidth(i);
+            }
+
+            // 현재 선택 년월일 Rect 설정
+            mCurrentDateRect = new RectF(0, getDrawHeaderTop(), textLayoutWidth, getDrawHeaderTop() + getDrawHeaderHeight());
+
+            canvas.save();
+            canvas.translate(0, startPointY);
+            textLayout.draw(canvas);
+            canvas.restore();
+        }
 
         // Header 를 Paint 하기위한 영역을 ClipRect 로 지정합니다.
         canvas.clipRect(getDrawHeaderLeft(), getDrawHeaderTop(), getDrawHeaderLeft() + getDrawHeaderWidth(), getDrawHeaderTop() + getDrawHeaderHeight(), Region.Op.REPLACE);
 
         // Header Background 를 그린다.
 //        canvas.drawRect(0, 0, getWidth(), mHeaderHeight + mHeaderRowPadding * 2 * getHeaderRowCount(), mHeaderBackgroundPaint);
+
+
+        // GroupHeaderItems 캐시 삭제
+        if (mGroupHeaderItems != null) {
+            for (GroupHeader groupHeader : mGroupHeaderItems) {
+                groupHeader.setRectF(null);
+            }
+        }
 
         // Header Text 를 그린다.
         startPixel = startFromPixel;
@@ -1738,7 +1779,7 @@ public class ScheduleView extends View {
      * @return ScheduleView 의 ScheduleEvent 가 그려질 Rect 영역의 Width 값.
      */
     private int getDrawEventsWidth() {
-        return getWidth();
+        return getWidth() - (int) getDrawEventsLeft();
     }
 
     /**
@@ -1747,7 +1788,7 @@ public class ScheduleView extends View {
      * @return ScheduleView 의 ScheduleEvent 가 그려질 Rect 영역의 Height 값.
      */
     private int getDrawEventHeight() {
-        return getHeight();
+        return getHeight() - (int) getDrawEventsTop();
     }
 
     /////////////////////////////////////////////////////////////////
@@ -1762,7 +1803,7 @@ public class ScheduleView extends View {
         if (event.getAction() == MotionEvent.ACTION_DOWN && mTouchedKind == TouchedKind.NONE_TOUCH) {
             if (mWeekDateVisible && mWeekSeekerGestureRect.contains(event.getX(), event.getY()))
                 mTouchedKind = TouchedKind.WEEK_DATE_SEEKER_AREA;
-            else if (mWeekDateVisible && mCurrentDateRect.contains(event.getX(), event.getY()))
+            else if (mCurrentDateRect.contains(event.getX(), event.getY()))
                 mTouchedKind = TouchedKind.WEEK_CURRENT_DATE_AREA;
             else
                 mTouchedKind = TouchedKind.SCHEDULE_AREA;
@@ -1923,30 +1964,13 @@ public class ScheduleView extends View {
     public void setViewMode(int viewMode, boolean refresh) {
         this.mViewMode = viewMode;
         this.mFixedGroupHeader = null;
-        this.setNumberOfVisibleDays(mCachedNumberOfVisible);
+        this.setNumberOfVisibleDays(mCachedNumberOfVisible, refresh);
         if (refresh)
             notifyDataSetChanged();
     }
 
     public List<? extends ScheduleViewEvent> getCurrentEvents() {
         return mCurrentEvents;
-    }
-
-    public void setCurrentEvents(List<? extends ScheduleViewEvent> currentEvents) {
-        if (mCurrentEvents != null) {
-            mCurrentEvents.clear();
-            mCurrentEvents = null;
-        }
-
-        if (mEventRects == null)
-            mEventRects = new ArrayList<>();
-
-        // Clear events.
-        mEventRects.clear();
-        sortAndCacheEvents(currentEvents);
-        calculateHeaderHeight();
-
-        mCurrentEvents = currentEvents;
     }
 
     public GroupHeader getFixedGroupHeader() {
@@ -1963,7 +1987,7 @@ public class ScheduleView extends View {
             if (fixedGroupHeader != null) {
                 this.mNumberOfVisibleDays = mFixedGroupHeader.getSubHeaders().size();
             } else {
-                this.mNumberOfVisibleDays = mCachedNumberOfVisible;
+                this.mNumberOfVisibleDays = mCachedNumberOfVisible > getHeaderItemSize() ? getHeaderItemSize() : mCachedNumberOfVisible;
             }
             mCurrentOrigin.x = 0;
             mCurrentOrigin.y = 0;
@@ -2016,6 +2040,11 @@ public class ScheduleView extends View {
     public void setGroupHeaderItems(List<GroupHeader> groupHeaderItems) {
         this.mGroupHeaderItems = groupHeaderItems;
         this.setNumberOfVisibleDays(this.mNumberOfVisibleDays);
+    }
+
+    public void setGroupHeaderItems(List<GroupHeader> groupHeaderItems, boolean refresh) {
+        this.mGroupHeaderItems = groupHeaderItems;
+        this.setNumberOfVisibleDays(this.mNumberOfVisibleDays, refresh);
     }
 
     public FloatingActionButton getFloatingActionButton() {
@@ -2197,9 +2226,9 @@ public class ScheduleView extends View {
             this.mNumberOfVisibleDays = getHeaderItemSize();
         else
             this.mNumberOfVisibleDays = numberOfVisibleDays;
-        mCurrentOrigin.x = 0;
-        mCurrentOrigin.y = 0;
         if (refresh) {
+            mCurrentOrigin.x = 0;
+            mCurrentOrigin.y = 0;
             invalidate();
         }
     }
@@ -2290,12 +2319,12 @@ public class ScheduleView extends View {
         return mEventDrawListener;
     }
 
-    public CalendarListener getCalendarListener() {
-        return mCalendarListener;
+    public DateCalendarListener getDateCalendarListener() {
+        return mDateCalendarListener;
     }
 
-    public void setCalendarListener(CalendarListener calendarListener) {
-        this.mCalendarListener = calendarListener;
+    public void setDateCalendarListener(DateCalendarListener dateCalendarListener) {
+        this.mDateCalendarListener = dateCalendarListener;
     }
 
 
@@ -2358,7 +2387,7 @@ public class ScheduleView extends View {
          * 하나의 이벤트 (하루 이상 확장 이벤트)에 대한 하나 이상의 사각형이있을 수 있습니다.
          * 그 경우 EventRect 두 인스턴스는 하나의 이벤트에 사용된다.
          * 주어진 이벤트는 "originalEvent"에 저장됩니다. 그러나 구형 인스턴스 직사각형 해당 이벤트는 "event"로 저장된다.
-         * <p/>
+         * <p>
          * Create a new instance of event rect. An EventRect is actually the rectangle that is drawn
          * on the calendar for a given event. There may be more than one rectangle for a single
          * event (an event that expands more than one day). In that case two instances of the
@@ -2490,7 +2519,7 @@ public class ScheduleView extends View {
             throw new IllegalStateException("You must provide a EventLoader");
 
         // If a refresh was requested then reset some variables.
-        if (mRefreshEvents) {
+        if (mEventRects == null || mRefreshEvents) {
             mEventRects.clear();
             if (mCurrentEvents != null) {
                 mCurrentEvents.clear();
@@ -2752,7 +2781,7 @@ public class ScheduleView extends View {
 
     public interface EventLongPressListener {
         /**
-         * Similar to {@link com.github.sdw8001.scheduleview.WeekView.EventClickListener} but with a long press.
+         * Similar to {@link com.github.sdw8001.scheduleview.event.ScheduleViewEvent} but with a long press.
          *
          * @param event:     event clicked.
          * @param eventRect: view containing the clicked event.
@@ -2791,7 +2820,7 @@ public class ScheduleView extends View {
     public interface ScrollListener {
         /**
          * Called when the first visible day has changed.
-         * <p/>
+         * <p>
          * (this will also be called during the first draw of the weekview)
          *
          * @param newFirstVisibleDay The new first visible day
@@ -2802,5 +2831,12 @@ public class ScheduleView extends View {
 
     public interface EventDrawListener {
         SpannableStringBuilder onEventDraw(ScheduleViewEvent event, Paint textPaint, int availableWidth, int availableHeight);
+    }
+
+    public interface DateCalendarListener {
+        /**
+         * DatePicker 가 선택되었을때 Listener 에게 알립니다.
+         */
+        void onSelectPicker(Calendar calendar);
     }
 }

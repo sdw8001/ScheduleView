@@ -20,12 +20,9 @@ import com.android.datetimepicker.date.DatePickerDialog;
 import com.github.sdw8001.scheduleview.event.ScheduleViewEvent;
 import com.github.sdw8001.scheduleview.header.GroupHeader;
 import com.github.sdw8001.scheduleview.header.Header;
-import com.github.sdw8001.scheduleview.listener.CalendarListener;
 import com.github.sdw8001.scheduleview.loader.ScheduleLoader;
 import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
 import com.github.sdw8001.scheduleview.view.ScheduleView;
-
-import org.joda.time.LocalDateTime;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -41,11 +38,11 @@ public class ScheduleViewActivity extends AppCompatActivity
         ScheduleView.EventLongPressListener,
         ScheduleView.EmptyViewClickListener,
         ScheduleView.GroupHeaderClickListener,
-        DatePickerDialog.OnDateSetListener{
+        ScheduleView.DateCalendarListener,
+        DatePickerDialog.OnDateSetListener {
 
     private List<AppointmentEvent> mAppointmentList;
     private ScheduleView mScheduleView;
-    private CalendarListener mCalendarListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +57,7 @@ public class ScheduleViewActivity extends AppCompatActivity
             public void onClick(View view) {
                 if (mScheduleView.getFocusedEventRect() != null) {
                     Snackbar.make(view, mScheduleView.getFocusedEventRect().originalEvent.getKey(), Snackbar.LENGTH_LONG).setAction("Action", null).show();
-                }else {
+                } else {
                     Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                             .setAction("Action", null).show();
                 }
@@ -68,35 +65,15 @@ public class ScheduleViewActivity extends AppCompatActivity
         });
 
         mScheduleView = (ScheduleView) findViewById(R.id.scheduleView);
-        mScheduleView.setNumberOfVisibleDays(20);
+        mScheduleView.setNumberOfVisibleDays(25);
         mScheduleView.setScheduleLoadListener(this);
         mScheduleView.setEventDrawListener(this);
         mScheduleView.setOnEventClickListener(this);
         mScheduleView.setEventLongPressListener(this);
         mScheduleView.setEmptyViewClickListener(this);
         mScheduleView.setGroupHeaderClickListener(this);
+        mScheduleView.setDateCalendarListener(this);
         mScheduleView.setFloatingActionButton(fab);
-
-
-        if (mCalendarListener == null) {
-            mCalendarListener = new CalendarListener() {
-                @Override
-                public void onSelectPicker() {
-                    //User can use any type of pickers here the below picker is only Just a example
-                    DatePickerDialog.newInstance(ScheduleViewActivity.this,
-                            Calendar.getInstance().get(Calendar.YEAR),
-                            Calendar.getInstance().get(Calendar.MONTH),
-                            Calendar.getInstance().get(Calendar.DAY_OF_MONTH)).show(getFragmentManager(), "date_picker");
-                }
-
-                @Override
-                public void onSelectDate(LocalDateTime selectedDate) {
-                    //callback when a date is selected
-//                    mDateSelectedTv.setText("" + selectedDate.getDayOfMonth() + "-" + selectedDate.getMonthOfYear() + "-" + selectedDate.getYear());
-                }
-            };
-        }
-        mScheduleView.setCalendarListener(mCalendarListener);
 
         List<GroupHeader> headers = new ArrayList<>();
         DoctorHeader doctorHeader;
@@ -158,6 +135,10 @@ public class ScheduleViewActivity extends AppCompatActivity
                 if (mScheduleView != null && mScheduleView.getViewMode() != ScheduleView.VIEW_CHILD)
                     mScheduleView.setViewMode(ScheduleView.VIEW_CHILD, true);
                 return true;
+
+            case R.id.action_showDatePicker:
+                onSelectPicker(Calendar.getInstance());
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -168,7 +149,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         if (mAppointmentList == null)
             mAppointmentList = new ArrayList<>();
 
-        List<ScheduleViewEvent> matchedEvents = new ArrayList<ScheduleViewEvent>();
+        List<ScheduleViewEvent> matchedEvents = new ArrayList<>();
         AppointmentEvent appointmentEvent;
 
         appointmentEvent = new AppointmentEvent();
@@ -496,7 +477,7 @@ public class ScheduleViewActivity extends AppCompatActivity
                     + scheduleRect.getStartTime().get(Calendar.DAY_OF_MONTH) + " "
                     + scheduleRect.getStartTime().get(Calendar.HOUR_OF_DAY) + ":"
                     + scheduleRect.getStartTime().get(Calendar.MINUTE) + "]";
-            Toast.makeText(this, "EmptyClicked : " + firstLine , Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "EmptyClicked : " + firstLine, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -513,6 +494,15 @@ public class ScheduleViewActivity extends AppCompatActivity
             Toast.makeText(this, groupHeader.getHeaderName(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    @Override
+    public void onSelectPicker(Calendar calendar) {
+        DatePickerDialog.newInstance(ScheduleViewActivity.this,
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)).show(getFragmentManager(), "date_picker");
+    }
+
     @Override
     public void onDateSet(DatePickerDialog dialog, int year, int monthOfYear, int dayOfMonth) {
         Calendar calendar = Calendar.getInstance();

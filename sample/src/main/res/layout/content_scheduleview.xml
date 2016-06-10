@@ -42,7 +42,7 @@
         app:hourSeparatorHeight="1dp"
         app:minHourHeight="100dp"
         app:noOfVisibleDays="3"
-        app:textSize="12sp"
+        app:textSize="16sp"
         app:todayBackgroundColor="#1848adff"
         app:todayHeaderTextColor="@color/accent"
         app:weekDateVisible="true" />

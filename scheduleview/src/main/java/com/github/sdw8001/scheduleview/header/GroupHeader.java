@@ -1,6 +1,8 @@
 package com.github.sdw8001.scheduleview.header;
 
 import android.graphics.RectF;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -9,7 +11,7 @@ import java.util.List;
 /**
  * Created by sdw80 on 2016-05-03.
  */
-public class GroupHeader extends Header implements Serializable {
+public class GroupHeader extends Header implements Parcelable {
     private List<Header> subHeaders;
     private RectF rectF;
 
@@ -51,4 +53,34 @@ public class GroupHeader extends Header implements Serializable {
     public void setSubHeaders(List<Header> subHeaders) {
         this.subHeaders = subHeaders;
     }
+
+    // 아래는 Parcelable 관련
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeParcelable(rectF, 0);
+        dest.writeTypedList(subHeaders);
+    }
+
+    public GroupHeader(Parcel parcel) {
+        rectF = parcel.readParcelable(RectF.class.getClassLoader());
+        parcel.readTypedList(subHeaders, Header.CREATOR);
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator<GroupHeader>() {
+        @Override
+        public GroupHeader createFromParcel(Parcel source) {
+            return new GroupHeader(source);
+        }
+
+        @Override
+        public GroupHeader[] newArray(int size) {
+            return new GroupHeader[size];
+        }
+    };
 }

@@ -122,14 +122,14 @@ public class ScheduleViewActivity extends AppCompatActivity
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE, mScheduleView.getFocusedWeekDate());
-        outState.putSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER, mScheduleView.getFixedGroupHeader());
+        outState.putParcelable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER, mScheduleView.getFixedGroupHeader());
     }
 
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
         mScheduleView.setFocusedWeekDate((Calendar)savedInstanceState.getSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE), false);
-        mScheduleView.setFixedGroupHeader((GroupHeader) savedInstanceState.getSerializable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER));
+        mScheduleView.setFixedGroupHeader((GroupHeader) savedInstanceState.getParcelable(SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER));
     }
 
     @Override

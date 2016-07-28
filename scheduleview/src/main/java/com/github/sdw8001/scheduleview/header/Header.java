@@ -1,12 +1,15 @@
 package com.github.sdw8001.scheduleview.header;
 
-import java.io.Serializable;
+import android.os.Parcel;
+import android.os.Parcelable;
+
 import java.util.Calendar;
+import java.util.GregorianCalendar;
 
 /**
  * Created by sdw80 on 2016-04-22.
  */
-public class Header implements Serializable {
+public class Header implements Parcelable {
 
     /**
      * Header 의 종류가 Calendar 의 Date
@@ -105,4 +108,40 @@ public class Header implements Serializable {
     public void setCalendar(Calendar calendar) {
         this.calendar = calendar;
     }
+
+    // 아래는 Parcelable 관련
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(parentHeaderKey);
+        dest.writeString(parentHeaderName);
+        dest.writeString(headerKey);
+        dest.writeString(headerName);
+        dest.writeSerializable(calendar);
+    }
+
+    public Header(Parcel parcel) {
+        parentHeaderKey = parcel.readString();
+        parentHeaderName = parcel.readString();
+        headerKey = parcel.readString();
+        headerName = parcel.readString();
+        calendar = (GregorianCalendar) parcel.readSerializable();
+    }
+
+    public static final Parcelable.Creator CREATOR = new Parcelable.Creator<Header>() {
+        @Override
+        public Header createFromParcel(Parcel source) {
+            return new Header(source);
+        }
+
+        @Override
+        public Header[] newArray(int size) {
+            return new Header[0];
+        }
+    };
 }

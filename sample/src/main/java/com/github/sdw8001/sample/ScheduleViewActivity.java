@@ -493,7 +493,9 @@ public class ScheduleViewActivity extends AppCompatActivity
                     + (scheduleRect.getStartTime().get(Calendar.MONTH) + 1) + "-"
                     + scheduleRect.getStartTime().get(Calendar.DAY_OF_MONTH) + " "
                     + scheduleRect.getStartTime().get(Calendar.HOUR_OF_DAY) + ":"
-                    + scheduleRect.getStartTime().get(Calendar.MINUTE) + "]";
+                    + scheduleRect.getStartTime().get(Calendar.MINUTE) + "]"
+                    + scheduleRect.getParentHeaderKey() + ":" + scheduleRect.getParentHeaderName() + ","
+                    + scheduleRect.getHeaderKey() + ":" + scheduleRect.getHeaderName();
             Toast.makeText(this, "EmptyClicked : " + firstLine, Toast.LENGTH_SHORT).show();
         }
     }

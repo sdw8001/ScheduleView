@@ -2418,18 +2418,56 @@ public class ScheduleView extends View {
      * Column 에 해당되는 Header Key 값과, 해당 Vertical 값에 해당되는 Calendar(Start, End) 와 RectF 를 갖는다.
      */
     public class ScheduleRect {
+        private String parentHeaderKey;
+        private String parentHeaderName;
         private String headerKey;
+        private String headerName;
         private RectF rectF;
         private Calendar startTime;
         private Calendar endTime;
 
         /**
          */
-        public ScheduleRect(String headerKey, RectF rectF, Calendar startTime, Calendar endTime) {
+        public ScheduleRect(String parentHeaderKey, String parentHeaderName, String headerKey, String headerName, RectF rectF, Calendar startTime, Calendar endTime) {
+            this.parentHeaderKey = parentHeaderKey;
+            this.parentHeaderName = parentHeaderName;
             this.headerKey = headerKey;
+            this.headerName = headerName;
             this.rectF = rectF;
             this.startTime = startTime;
             this.endTime = endTime;
+        }
+
+        public String getParentHeaderKey() {
+            return parentHeaderKey;
+        }
+
+        public void setParentHeaderKey(String parentHeaderKey) {
+            this.parentHeaderKey = parentHeaderKey;
+        }
+
+        public String getParentHeaderName() {
+            return parentHeaderName;
+        }
+
+        public void setParentHeaderName(String parentHeaderName) {
+            this.parentHeaderName = parentHeaderName;
+        }
+
+        public String getHeaderKey() {
+            return headerKey;
+        }
+
+        public void setHeaderKey(String headerKey) {
+            this.headerKey = headerKey;
+        }
+
+        public String getHeaderName() {
+            return headerName;
+        }
+
+        public void setHeaderName(String headerName) {
+            this.headerName = headerName;
         }
 
         public Calendar getEndTime() {
@@ -2454,14 +2492,6 @@ public class ScheduleView extends View {
 
         public void setRectF(RectF rectF) {
             this.rectF = rectF;
-        }
-
-        public String getHeaderKey() {
-            return headerKey;
-        }
-
-        public void setHeaderKey(String headerKey) {
-            this.headerKey = headerKey;
         }
     }
 
@@ -2507,7 +2537,7 @@ public class ScheduleView extends View {
                 } else
                     rectF = null;
 
-                scheduleRect = new ScheduleRect(header.getHeaderKey(), rectF, startTime, endTime);
+                scheduleRect = new ScheduleRect(header.getParentHeaderKey(), header.getParentHeaderName(), header.getHeaderKey(), header.getHeaderName(), rectF, startTime, endTime);
                 mScheduleRects.add(scheduleRect);
             }
         }

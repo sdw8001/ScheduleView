@@ -866,6 +866,9 @@ public class ScheduleView extends View {
     private boolean clickEmptyRect(MotionEvent e) {
         for (ScheduleRect scheduleRect : mScheduleRects) {
 
+            if (mFixedGroupHeader != null && !mFixedGroupHeader.getHeaderKey().equals(scheduleRect.getParentHeaderKey()))
+                continue;
+
             // TouchPoint 가 EventRect 에 포함되면
             if (scheduleRect.rectF != null && scheduleRect.rectF.contains(e.getX(), e.getY())) {
                 playSoundEffect(SoundEffectConstants.CLICK);
@@ -1431,15 +1434,11 @@ public class ScheduleView extends View {
             case VIEW_CHILD:
                 List<Header> headers = new ArrayList<>();
 
-                if (mFixedGroupHeader != null) {
-                    headers.addAll(mFixedGroupHeader.getSubHeaders());
-                } else {
-                    for (GroupHeader groupHeader : mGroupHeaderItems) {
-                        if (groupHeader.getSubHeaders() == null)
-                            continue;
+                for (GroupHeader groupHeader : mGroupHeaderItems) {
+                    if (groupHeader.getSubHeaders() == null)
+                        continue;
 
-                        headers.addAll(groupHeader.getSubHeaders());
-                    }
+                    headers.addAll(groupHeader.getSubHeaders());
                 }
                 return headers.toArray(new Header[1]);
         }
@@ -1526,15 +1525,24 @@ public class ScheduleView extends View {
 
     private void drawBaseEvent(int columnIndex, float startFromPixel) {
         int columnGap = 24 * columnIndex;
+        List<ScheduleRect> scheduleRects = new ArrayList<>();
+        if (mFixedGroupHeader != null) {
+            for (ScheduleRect rect : mScheduleRects) {
+                if (mFixedGroupHeader.getHeaderKey().equals(rect.getParentHeaderKey()))
+                    scheduleRects.add(rect);
+            }
+        } else {
+            scheduleRects = mScheduleRects;
+        }
         for (int i = columnGap; i < 24 + columnGap; i++) {
 
             // Calculate top.
-            float top = mHourHeight * 24 * (mScheduleRects.get(i).startTime.get(Calendar.HOUR_OF_DAY) * 60 + mScheduleRects.get(i).startTime.get(Calendar.MINUTE)) / 1440
+            float top = mHourHeight * 24 * (scheduleRects.get(i).startTime.get(Calendar.HOUR_OF_DAY) * 60 + scheduleRects.get(i).startTime.get(Calendar.MINUTE)) / 1440
                     + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
             // Calculate bottom.
-            float bottom = mHourHeight * 24 * ((mScheduleRects.get(i).endTime.get(Calendar.DAY_OF_MONTH) - mScheduleRects.get(i).startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 +
-                    mScheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * 60 + mScheduleRects.get(i).endTime.get(Calendar.MINUTE)) / 1440
+            float bottom = mHourHeight * 24 * ((scheduleRects.get(i).endTime.get(Calendar.DAY_OF_MONTH) - scheduleRects.get(i).startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 +
+                    scheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * 60 + scheduleRects.get(i).endTime.get(Calendar.MINUTE)) / 1440
                     + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 
             // Calculate left.
@@ -1549,14 +1557,14 @@ public class ScheduleView extends View {
 
             // Draw the event and the event name on top of it.
             if (left <= right && left <= getWidth() && top <= getHeight() && right >= mHeaderColumnWidth && bottom >= getDrawEventsTop()) {
-                mScheduleRects.get(i).rectF = new RectF(left, top, right, bottom);
+                scheduleRects.get(i).rectF = new RectF(left, top, right, bottom);
             } else
-                mScheduleRects.get(i).rectF = null;
+                scheduleRects.get(i).rectF = null;
 
             if (getFocusedEmptyScheduleRect() != null &&
-                    getFocusedEmptyScheduleRect().headerKey.equals(mScheduleRects.get(i).headerKey) &&
-                    getFocusedEmptyScheduleRect().startTime == mScheduleRects.get(i).startTime) {
-                getFocusedEmptyScheduleRect().rectF = mScheduleRects.get(i).rectF;
+                    getFocusedEmptyScheduleRect().headerKey.equals(scheduleRects.get(i).headerKey) &&
+                    getFocusedEmptyScheduleRect().startTime == scheduleRects.get(i).startTime) {
+                getFocusedEmptyScheduleRect().rectF = scheduleRects.get(i).rectF;
             }
         }
     }

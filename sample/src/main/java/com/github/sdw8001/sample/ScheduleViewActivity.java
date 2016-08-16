@@ -506,9 +506,8 @@ public class ScheduleViewActivity extends AppCompatActivity
             if (mScheduleView.getFixedGroupHeader() == null) {
                 this.mScheduleView.setFixedGroupHeader(groupHeader);
             } else {
-                this.mScheduleView.setFixedGroupHeader(null);
+                this.mScheduleView.setFixedGroupHeader(null, false);
             }
-            this.mScheduleView.notifyDataSetChanged();
 
             Toast.makeText(this, groupHeader.getHeaderName(), Toast.LENGTH_SHORT).show();
         }

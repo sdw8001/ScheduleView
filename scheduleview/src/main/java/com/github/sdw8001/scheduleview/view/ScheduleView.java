@@ -1430,11 +1430,16 @@ public class ScheduleView extends View {
                 return mGroupHeaderItems.toArray(new Header[1]);
             case VIEW_CHILD:
                 List<Header> headers = new ArrayList<>();
-                for (GroupHeader groupHeader : mGroupHeaderItems) {
-                    if (groupHeader.getSubHeaders() == null)
-                        continue;
 
-                    headers.addAll(groupHeader.getSubHeaders());
+                if (mFixedGroupHeader != null) {
+                    headers.addAll(mFixedGroupHeader.getSubHeaders());
+                } else {
+                    for (GroupHeader groupHeader : mGroupHeaderItems) {
+                        if (groupHeader.getSubHeaders() == null)
+                            continue;
+
+                        headers.addAll(groupHeader.getSubHeaders());
+                    }
                 }
                 return headers.toArray(new Header[1]);
         }

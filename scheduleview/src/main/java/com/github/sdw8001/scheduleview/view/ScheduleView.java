@@ -60,6 +60,7 @@ import java.util.Locale;
 
 /**
  * Created by sdw80 on 2016-04-21.
+ *
  */
 public class ScheduleView extends View {
 
@@ -121,6 +122,9 @@ public class ScheduleView extends View {
     // Draw 에 사용될 Paint 관련
     private Paint mHeaderColumnBackgroundPaint;
     private Paint mEventBackgroundPaint;
+    private Paint mEventTypeColorPaint;
+    private Paint mEventTypeDetailBackPaint;
+    private Paint mEventTypeDetailForePaint;
     private Paint mFocusedEmptyEventPaint;
     private Paint mFocusedEventPaint;
 
@@ -139,7 +143,6 @@ public class ScheduleView extends View {
     private int mCachedNumberOfVisible = 3;
 
     // WeekDateSelector 관련
-    //TODO:WeekDateSeeker
     private RectF mWeekSeekerGestureRect;
     private float mWeekDateSeekerWidth; // WeekDateSeeker 가로크기
     private float mWeekDateSeekerPortraitHeight = 130; // WeekDateSeeker 세로크기
@@ -174,7 +177,18 @@ public class ScheduleView extends View {
     private GestureDetectorCompat mWeekGestureDetector;
     private OverScroller mWeekScroller;
 
+    // Time 범위 관련 변수
+    private Calendar mTimeStart = Calendar.getInstance();
+    private Calendar mTimeEnd = Calendar.getInstance();
+
     // Attributes 의 초기값과 함께 선언
+    private int mTypeColor = Color.rgb(255, 0, 0);
+    private boolean mUseTypeColor = false;
+    private int mTimeStartHour = 0;
+    private int mTimeStartMinute = 0;
+    private int mTimeEndHour = 24;
+    private int mTimeEndMinute = 0;
+    private int mTimeDuration = 60;
     private int mColumnGap = 10;
     private int mMinHourHeight = 0; //no minimum specified (기준이 되는 base View 의 크기에 따라 동적으로 설정)
     private int mMaxHourHeight = 250;
@@ -296,6 +310,11 @@ public class ScheduleView extends View {
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.ScheduleView, 0, 0);
         try {
 //            mFirstDayOfWeek = a.getInteger(R.styleable.ScheduleView_firstDayOfWeek, mFirstDayOfWeek);
+            mTimeStartHour = a.getInteger(R.styleable.ScheduleView_timeStartHour, mTimeStartHour);
+            mTimeStartMinute = a.getInteger(R.styleable.ScheduleView_timeStartMinute, mTimeStartMinute);
+            mTimeEndHour = a.getInteger(R.styleable.ScheduleView_timeEndHour, mTimeEndHour);
+            mTimeEndMinute = a.getInteger(R.styleable.ScheduleView_timeEndMinute, mTimeEndMinute);
+            mTimeDuration = a.getInteger(R.styleable.ScheduleView_timeDuration, mTimeDuration);
             mHourHeight = a.getDimensionPixelSize(R.styleable.ScheduleView_hourHeight, mHourHeight);
             mMinHourHeight = a.getDimensionPixelSize(R.styleable.ScheduleView_minHourHeight, mMinHourHeight);
             mEffectiveMinHourHeight = mMinHourHeight;
@@ -364,6 +383,12 @@ public class ScheduleView extends View {
         // Scrolling initialization.
         mGestureDetector = new GestureDetectorCompat(mContext, mGestureListener);
         mScroller = new OverScroller(mContext, new FastOutLinearInInterpolator());
+
+        //TODO: Time 범위설정
+        mTimeStart.set(Calendar.HOUR_OF_DAY, mTimeStartHour);
+        mTimeStart.set(Calendar.MINUTE, mTimeStartMinute);
+        mTimeEnd.set(Calendar.HOUR_OF_DAY, mTimeEndHour);
+        mTimeEnd.set(Calendar.MINUTE, mTimeEndMinute);
 
         //TODO:WeekDateSeeker
         mWeekGestureDetector = new GestureDetectorCompat(mContext, mWeekGestureListener);
@@ -483,6 +508,21 @@ public class ScheduleView extends View {
             this.setLayerType(LAYER_TYPE_SOFTWARE, mEventBackgroundPaint);
         }
 
+        // Prepare event type paint.
+        mEventTypeColorPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mEventTypeColorPaint.setColor(Color.rgb(174, 208, 238));
+
+        // Prepare event TypeDetailFore paint.
+        mEventTypeDetailForePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mEventTypeDetailForePaint.setTextAlign(Paint.Align.CENTER);
+        mEventTypeDetailForePaint.setTextSize(mTextSize);
+        mEventTypeDetailForePaint.setShadowLayer(mEventRectShadowRadius / 2, 0, 0, Color.GRAY);
+        mEventTypeDetailForePaint.setFakeBoldText(true);
+
+        // Prepare event TypeDetailBack paint.
+        mEventTypeDetailBackPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mEventTypeDetailBackPaint.setShadowLayer(mEventRectShadowRadius, 0, 0, Color.GRAY);
+
 
         // Prepare cell focused paint.
         mFocusedEmptyEventPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -532,13 +572,25 @@ public class ScheduleView extends View {
 
     private void initTextTimeWidth() {
         mTimeTextWidth = 0;
-        for (int i = 0; i < 24; i++) {
+        int start = 0, end = getRowCount();
+
+        for (int i = start; i < end; i++) {
             // Measure time string and get max width.
-            String time = getDateTimeInterpreter().interpretTime(i);
+            Calendar calendar = (Calendar) mTimeStart.clone();
+            calendar.add(Calendar.MINUTE, mTimeDuration * i);
+            String time = getDateTimeInterpreter().interpretTime(calendar);
             if (time == null)
                 throw new IllegalStateException("A DateTimeInterpreter must not return null time");
             mTimeTextWidth = Math.max(mTimeTextWidth, mTimeTextPaint.measureText(time));
         }
+    }
+
+    private int getRowCount() {
+        return getTotalMinute() / mTimeDuration;
+    }
+
+    private int getTotalMinute() {
+        return (int) (mTimeEnd.getTimeInMillis() - mTimeStart.getTimeInMillis()) / (1000 * 60);
     }
 
     private final GestureDetector.SimpleOnGestureListener mGestureListener = new GestureDetector.SimpleOnGestureListener() {
@@ -620,13 +672,13 @@ public class ScheduleView extends View {
                     mScroller.fling((int) mCurrentOrigin.x, (int) mCurrentOrigin.y,
                             (int) (velocityX * mXScrollingSpeed), 0,
                             Integer.MIN_VALUE, Integer.MAX_VALUE,
-                            (int) -(mHourHeight * 24 + getDrawEventsTop() - getHeight()), 0);
+                            (int) -(mHourHeight * getRowCount() + getDrawEventsTop() - getHeight()), 0);
                     break;
                 case VERTICAL:
                     mScroller.fling((int) mCurrentOrigin.x, (int) mCurrentOrigin.y,
                             0, (int) velocityY,
                             Integer.MIN_VALUE, Integer.MAX_VALUE,
-                            (int) -(mHourHeight * 24 + getDrawEventsTop() - getHeight()), 0);
+                            (int) -(mHourHeight * getRowCount() + getDrawEventsTop() - getHeight()), 0);
                     break;
             }
 
@@ -1119,7 +1171,7 @@ public class ScheduleView extends View {
         calculateHeaderHeight(); // header 의 높이는 적당한지 확인하기위해 계산 (AllDay events 에 따라 다름)
 
         if (mAreDimensionsInvalid) {
-            mEffectiveMinHourHeight = Math.max(mMinHourHeight, (int) ((getHeight() - (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)) / 24));
+            mEffectiveMinHourHeight = Math.max(mMinHourHeight, (int) ((getHeight() - (getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)) / getRowCount()));
 
             mAreDimensionsInvalid = false;
             if (mScrollToDay != null)
@@ -1147,8 +1199,8 @@ public class ScheduleView extends View {
         }
 
         // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mCurrentOrigin.y < getHeight() - mHourHeight * 24 - getDrawEventsTop())
-            mCurrentOrigin.y = getHeight() - mHourHeight * 24 - getDrawEventsTop();
+        if (mCurrentOrigin.y < getHeight() - mHourHeight * getRowCount() - getDrawEventsTop())
+            mCurrentOrigin.y = getHeight() - mHourHeight * getRowCount() - getDrawEventsTop();
 
         // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
         if (mCurrentOrigin.y > 0) {
@@ -1233,7 +1285,7 @@ public class ScheduleView extends View {
 
             // hourLines 배열에 시간 분할선을 그리기 위한 현재 HeaderColumn 의 index 에 해당되는 x,y 좌표들을 설정한다.
             int i = 0;
-            for (int hourNumber = 0; hourNumber < 24; hourNumber++) {
+            for (int hourNumber = 0; hourNumber < getRowCount(); hourNumber++) {
                 float top = getDrawEventsTop() + mCurrentOrigin.y + mHourHeight * hourNumber;
                 if (top > getDrawEventsTop() - mHourSeparatorHeight && top < getHeight() && startPixel + mWidthPerDay - start > 0) {
                     hourLines[i * 4] = start;
@@ -1524,7 +1576,7 @@ public class ScheduleView extends View {
     }
 
     private void drawBaseEvent(int columnIndex, float startFromPixel) {
-        int columnGap = 24 * columnIndex;
+        int columnGap = getRowCount() * columnIndex;
         List<ScheduleRect> scheduleRects = new ArrayList<>();
         if (mFixedGroupHeader != null) {
             for (ScheduleRect rect : mScheduleRects) {
@@ -1534,15 +1586,18 @@ public class ScheduleView extends View {
         } else {
             scheduleRects = mScheduleRects;
         }
-        for (int i = columnGap; i < 24 + columnGap; i++) {
+        for (int i = columnGap; i < getRowCount() + columnGap; i++) {
 
             // Calculate top.
-            float top = mHourHeight * 24 * (scheduleRects.get(i).startTime.get(Calendar.HOUR_OF_DAY) * 60 + scheduleRects.get(i).startTime.get(Calendar.MINUTE)) / 1440
+//            float top = mHourHeight * getRowCount() * (scheduleRects.get(i).startTime.get(Calendar.HOUR_OF_DAY) * mTimeDuration + scheduleRects.get(i).startTime.get(Calendar.MINUTE)) / getTotalMinute()
+//                    + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
+            float top = mHourHeight * getRowCount() * (scheduleRects.get(i).startTime.getTimeInMillis() - mTimeStart.getTimeInMillis()) / (1000 * 60) / getTotalMinute()
                     + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
             // Calculate bottom.
-            float bottom = mHourHeight * 24 * ((scheduleRects.get(i).endTime.get(Calendar.DAY_OF_MONTH) - scheduleRects.get(i).startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 +
-                    scheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * 60 + scheduleRects.get(i).endTime.get(Calendar.MINUTE)) / 1440
+//            float bottom = mHourHeight * getRowCount() * ((scheduleRects.get(i).endTime.get(Calendar.DAY_OF_MONTH) - scheduleRects.get(i).startTime.get(Calendar.DAY_OF_MONTH)) * mTimeDuration * getRowCount() + scheduleRects.get(i).endTime.get(Calendar.HOUR_OF_DAY) * mTimeDuration + scheduleRects.get(i).endTime.get(Calendar.MINUTE)) / getTotalMinute()
+//                    + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
+            float bottom = mHourHeight * getRowCount() * ((scheduleRects.get(i).startTime.getTimeInMillis() - mTimeStart.getTimeInMillis()) / (1000 * 60) + mTimeDuration) / getTotalMinute()
                     + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 
             // Calculate left.
@@ -1583,11 +1638,11 @@ public class ScheduleView extends View {
                 if (ScheduleViewUtil.isEventSameHeader(mEventRects.get(i).event, header, mViewMode)) {
 
                     // Calculate top.
-                    float top = mHourHeight * 24 * mEventRects.get(i).top / 1440
+                    float top = mHourHeight * (mEventRects.get(i).top - (mTimeStart.get(Calendar.HOUR_OF_DAY) * 60 + mTimeStart.get(Calendar.MINUTE))) / mTimeDuration
                             + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
                     // Calculate bottom.
-                    float bottom = mHourHeight * 24 * mEventRects.get(i).bottom / 1440
+                    float bottom = mHourHeight * (mEventRects.get(i).bottom - (mTimeStart.get(Calendar.HOUR_OF_DAY) * 60 + mTimeStart.get(Calendar.MINUTE))) / mTimeDuration
                             + mCurrentOrigin.y + getDrawEventsTop() - (mEventMarginTop + mEventMarginBottom);
 
                     // Calculate left.
@@ -1603,12 +1658,53 @@ public class ScheduleView extends View {
                     // Draw the event and the event name on top of it.
                     if (left <= right && left <= getWidth() && top <= getHeight() && right >= mHeaderColumnWidth && bottom >= getDrawEventsTop()) {
                         mEventRects.get(i).rectF = new RectF(left, top, right, bottom);
-                        // TODO : Event Color 항목이 없어서 주석
-                        mEventBackgroundPaint.setColor(mEventRects.get(i).event.getBackgroundColor() == 0 ? mDefaultEventColor : mEventRects.get(i).event.getBackgroundColor());
+
+                        // Draw Background
+                        if (mEventRects.get(i).event.getBackgroundColor() == 0)
+                            mEventBackgroundPaint.setColor(mDefaultEventColor);
+                        else
+                            mEventBackgroundPaint.setColor(mEventRects.get(i).event.getBackgroundColor());
                         canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mEventBackgroundPaint);
+
+                        // Draw TypeColor
+                        float typeColorWidth = mEventCornerRadius + 3;
+                        mEventTypeColorPaint.setColor(mEventRects.get(i).event.getTypeColor());
+                        canvas.drawRoundRect(new RectF(left, top, left + mEventCornerRadius * 2, bottom), mEventCornerRadius, mEventCornerRadius, mEventTypeColorPaint);
+                        mEventTypeColorPaint.setColor(mEventBackgroundPaint.getColor());
+                        canvas.drawRect(new RectF(left + typeColorWidth, top, left + mEventCornerRadius * 2 + 1, mEventRects.get(i).rectF.bottom), mEventTypeColorPaint);
+
+                        // Draw TypeDetail
+                        float typeDetailStringWidth = 30;
+                        float typeDetailPadding = 4;
+                        float typeDetailWidth = typeDetailStringWidth + typeDetailPadding * 2;
+                        float typeDetailX = left + typeDetailWidth / 2;
+                        float typeDetailY = top + typeColorWidth + typeDetailWidth / 2 - mEventTypeDetailForePaint.getTextSize() / 4;
+                        float eventTitleX = left + typeDetailWidth;
+                        float eventTitleY = top;
+                        float typeDetailLeft = left + typeDetailPadding;
+                        float typeDetailTop = top + typeDetailPadding;
+                        float typeDetailRight = typeDetailLeft + typeDetailStringWidth;
+                        float typeDetailBottom = typeDetailTop + typeDetailStringWidth;
+                        float typeDetailCornerRadius = mEventCornerRadius / 2;
+
+                        // Event 의 TypeColor 와 BackgroundColor 가 다른 경우, Type 의 구분이 있으므로 X Position 을 TypeColorWidth 만큼 더해준다.
+                        if (mEventRects.get(i).event.getTypeColor() != mEventBackgroundPaint.getColor()) {
+                            typeDetailX += typeColorWidth;
+                            eventTitleX += typeColorWidth;
+                            typeDetailLeft += typeColorWidth;
+                            typeDetailRight += typeColorWidth;
+                        }
+                        mEventTypeDetailForePaint.setColor(mEventRects.get(i).event.getTypeDetailForeColor());
+                        mEventTypeDetailBackPaint.setColor(mEventRects.get(i).event.getTypeDetailBackColor());
+                        if (!("G,S,R,N").contains(mEventRects.get(i).event.getTypeDetail()))
+                            canvas.drawRoundRect(new RectF(typeDetailLeft, typeDetailTop, typeDetailRight, typeDetailBottom), typeDetailCornerRadius, typeDetailCornerRadius, mEventTypeDetailBackPaint);
+                        canvas.drawText(mEventRects.get(i).event.getTypeDetail(), typeDetailX, typeDetailY, mEventTypeDetailForePaint);
+
                         if (mCellFocusable && getFocusedEventRect() != null && getFocusedEventRect().originalEvent.getKey().equals(mEventRects.get(i).originalEvent.getKey()))
                             canvas.drawRoundRect(mEventRects.get(i).rectF, mEventCornerRadius, mEventCornerRadius, mFocusedEventPaint);
-                        drawEventTitle(mEventRects.get(i).event, mEventRects.get(i).rectF, canvas, top, left);
+
+                        // Draw EventTitle
+                        drawEventTitle(mEventRects.get(i).event, mEventRects.get(i).rectF, canvas, eventTitleX, eventTitleY);
                     } else
                         mEventRects.get(i).rectF = null;
                 }
@@ -1624,11 +1720,14 @@ public class ScheduleView extends View {
         canvas.clipRect(0, getDrawHeaderTop() + getDrawHeaderHeight(), mHeaderColumnWidth, getHeight(), Region.Op.REPLACE);
 
         // 왼쪽의 Time Column Header 에 시간 별 Text 를 그립니다.
-        for (int i = 0; i < 24; i++) {
+        int start = 0, end = (int) (mTimeEnd.getTimeInMillis() - mTimeStart.getTimeInMillis()) / (1000 * 60 * mTimeDuration);
+        for (int i = start; i < end; i++) {
             float top = getDrawHeaderTop() + getDrawHeaderHeight() + mCurrentOrigin.y + mHourHeight * i + mHeaderMarginBottom;
 
-            // Draw the text if its y position is not outside of the visible area. The pivot point of the text is the point at the bottom-right corner.
-            String time = getDateTimeInterpreter().interpretTime(i);
+            // Draw the text if its y position is not outside of the visible area. The pivot point of the text is the point at the bottom-right corner..
+            Calendar calendar = (Calendar) mTimeStart.clone();
+            calendar.add(Calendar.MINUTE, mTimeDuration * i);
+            String time = getDateTimeInterpreter().interpretTime(calendar);
             if (time == null)
                 throw new IllegalStateException("A DateTimeInterpreter must not return null time");
             if (top < getHeight())
@@ -1642,15 +1741,18 @@ public class ScheduleView extends View {
      * @param event        The event of which the title (and location) should be drawn.
      * @param rect         The rectangle on which the text is to be drawn.
      * @param canvas       The canvas to draw upon.
-     * @param originalTop  The original top position of the rectangle. The rectangle may have some of its portion outside of the visible area.
      * @param originalLeft The original left position of the rectangle. The rectangle may have some of its portion outside of the visible area.
+     * @param originalTop  The original top position of the rectangle. The rectangle may have some of its portion outside of the visible area.
      */
-    private void drawEventTitle(ScheduleViewEvent event, RectF rect, Canvas canvas, float originalTop, float originalLeft) {
+    private void drawEventTitle(ScheduleViewEvent event, RectF rect, Canvas canvas, float originalLeft, float originalTop) {
         if (rect.right - rect.left - mEventPadding * 2 < 0) return;
         if (rect.bottom - rect.top - mEventPadding * 2 < 0) return;
 
         int availableHeight = (int) (rect.bottom - originalTop - mEventPadding * 2);
         int availableWidth = (int) (rect.right - originalLeft - mEventPadding * 2);
+
+        if (availableWidth < mEventTextPaint.getTextSize() + mEventPadding)
+            return;
 
         // Prepare the name of the event.
         SpannableStringBuilder bob = new SpannableStringBuilder();
@@ -2024,7 +2126,7 @@ public class ScheduleView extends View {
     public void setFocusedWeekDate(Calendar calendar, boolean changeCurrentOriginX) {
         if (changeCurrentOriginX) {
             Calendar today = ScheduleViewUtil.today();
-            long leftDaysWithGaps = -(ScheduleViewUtil.resetDay(calendar).getTimeInMillis() - today.getTimeInMillis()) / (24 * 60 * 60 * 1000);
+            long leftDaysWithGaps = -(ScheduleViewUtil.resetDay(calendar).getTimeInMillis() - today.getTimeInMillis()) / (getRowCount() * mTimeDuration * 60 * 1000);
             mWeekCurrentOrigin.x = leftDaysWithGaps * mWeekWidthPerDay;
         }
 
@@ -2118,13 +2220,10 @@ public class ScheduleView extends View {
                 }
 
                 @Override
-                public String interpretTime(int hour) {
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.set(Calendar.HOUR_OF_DAY, hour);
-                    calendar.set(Calendar.MINUTE, 0);
+                public String interpretTime(Calendar calendar) {
 
                     try {
-                        SimpleDateFormat sdf = DateFormat.is24HourFormat(getContext()) ? new SimpleDateFormat("HH:mm", Locale.getDefault()) : new SimpleDateFormat("hh a", Locale.getDefault());
+                        SimpleDateFormat sdf = DateFormat.is24HourFormat(getContext()) ? new SimpleDateFormat("HH:mm", Locale.getDefault()) : new SimpleDateFormat("a hh:mm", Locale.getDefault());
                         return sdf.format(calendar.getTime());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -2180,7 +2279,7 @@ public class ScheduleView extends View {
                     calendar.set(Calendar.MINUTE, 0);
 
                     try {
-                        SimpleDateFormat sdf = DateFormat.is24HourFormat(getContext()) ? new SimpleDateFormat("HH:mm", Locale.getDefault()) : new SimpleDateFormat("hh a", Locale.getDefault());
+                        SimpleDateFormat sdf = DateFormat.is24HourFormat(getContext()) ? new SimpleDateFormat("HH:mm", Locale.getDefault()) : new SimpleDateFormat("a hh:mm", Locale.getDefault());
                         return sdf.format(calendar.getTime());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -2263,6 +2362,122 @@ public class ScheduleView extends View {
 
     public void setScheduleLoadListener(ScheduleLoader.ScheduleLoadListener scheduleLoadListener) {
         this.mScheduleViewLoader = new ScheduleLoader(scheduleLoadListener);
+    }
+
+    /**
+     * Type Color 를 반환합니다.
+     * @return Type Color
+     */
+    public int getTypeColor() {
+        return mTypeColor;
+    }
+
+    /**
+     * Type Color 를 설정합니다.
+     * @param mTypeColor Type Color
+     */
+    public void setTypeColor(int mTypeColor) {
+        this.mTypeColor = mTypeColor;
+    }
+
+    /**
+     * Type Color 사용여부를 반환합니다.
+     * @return Type Color 사용여부
+     */
+    public boolean isUseTypeColor() {
+        return mUseTypeColor;
+    }
+
+    /**
+     * Type Color 사용여부를 설정합니다.
+     * @param mUseTypeColor Type Color 사용여부
+     */
+    public void setUseTypeColor(boolean mUseTypeColor) {
+        this.mUseTypeColor = mUseTypeColor;
+    }
+
+    /**
+     * 시작 Hour 를 반환합니다
+     * @return 시작 Hour
+     */
+    public int getTimeStartHour() {
+        return mTimeStartHour;
+    }
+
+    /**
+     * 시작 Hour 를 설정합니다.
+     * @param mTimeStartHour 시작 Hour
+     */
+    public void setTimeStartHour(int mTimeStartHour) {
+        this.mTimeStartHour = mTimeStartHour;
+        mTimeStart.set(Calendar.HOUR_OF_DAY, mTimeStartHour);
+    }
+
+    /**
+     * 시작 Minute 를 반환합니다
+     * @return 시작 Minute
+     */
+    public int getTimeStartMinute() {
+        return mTimeStartMinute;
+    }
+
+    /**
+     * 시작 Minute 를 설정합니다.
+     * @param mTimeStartMinute 시작 Minute
+     */
+    public void setTimeStartMinute(int mTimeStartMinute) {
+        this.mTimeStartMinute = mTimeStartMinute;
+        mTimeStart.set(Calendar.MINUTE, mTimeStartMinute);
+    }
+
+    /**
+     * 마지막 Hour 를 반환합니다.
+     * @return 마지막 Hour
+     */
+    public int getTimeEndHour() {
+        return mTimeEndHour;
+    }
+
+    /**
+     * 마지막 Hour 를 설정합니다.
+     * @param mTimeEndHour 마지막 Hour
+     */
+    public void setTimeEndHour(int mTimeEndHour) {
+        this.mTimeEndHour = mTimeEndHour;
+        mTimeEnd.set(Calendar.HOUR_OF_DAY, mTimeEndHour);
+    }
+
+    /**
+     * 마지막 Minute 를 반환합니다.
+     * @return 마지막 Minute
+     */
+    public int getTimeEndMinute() {
+        return mTimeEndMinute;
+    }
+
+    /**
+     * 마지막 Minute 를 설정합니다.
+     * @param mTimeEndMinute 마지막 Minute
+     */
+    public void setTimeEndMinute(int mTimeEndMinute) {
+        this.mTimeEndMinute = mTimeEndMinute;
+        mTimeEnd.set(Calendar.MINUTE, mTimeEndMinute);
+    }
+
+    /**
+     * Time Duration 을 반환합니다.
+     * @return Time Duration
+     */
+    public int getTimeDuration() {
+        return mTimeDuration;
+    }
+
+    /**
+     * Time Duration 을 설정합니다.
+     * @param mTimeDuration Time Duration
+     */
+    public void setTimeDuration(int mTimeDuration) {
+        this.mTimeDuration = mTimeDuration;
     }
 
     /**
@@ -2516,7 +2731,8 @@ public class ScheduleView extends View {
         RectF rectF;
 
         for (Header header : getHeaderItems()) {
-            for (int i = 0; i < 24; i++) {
+            for (int i = 0; i < getRowCount(); i++) {
+                /*
                 Calendar startTime = ScheduleViewUtil.today();
                 startTime.set(Calendar.HOUR_OF_DAY, i);
                 startTime.set(Calendar.MINUTE, 0);
@@ -2524,13 +2740,24 @@ public class ScheduleView extends View {
                 startTime.set(Calendar.MILLISECOND, 0);
                 Calendar endTime = (Calendar) startTime.clone();
                 endTime.set(Calendar.HOUR_OF_DAY, i + 1);
+                */
+                Calendar startTime, endTime;
+//                startTime = ScheduleViewUtil.today();
+                startTime = (Calendar) mTimeStart.clone();
+                startTime.add(Calendar.MINUTE, mTimeDuration * i);
+                endTime = (Calendar) startTime.clone();
+                endTime.add(Calendar.MINUTE, mTimeDuration);
 
                 // Calculate top.
-                float top = mHourHeight * 24 * (startTime.get(Calendar.HOUR_OF_DAY) * 60 + startTime.get(Calendar.MINUTE)) / 1440
+//                float top = mHourHeight * getRowCount() * (startTime.get(Calendar.HOUR_OF_DAY) * 60 + startTime.get(Calendar.MINUTE)) / getTotalMinute()
+//                        + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
+                float top = mHourHeight * i
                         + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
                 // Calculate bottom.
-                float bottom = mHourHeight * 24 * ((endTime.get(Calendar.DAY_OF_MONTH) - startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 + endTime.get(Calendar.HOUR_OF_DAY) * 60 + endTime.get(Calendar.MINUTE)) / 1440
+//                float bottom = mHourHeight * getRowCount() * ((endTime.get(Calendar.DAY_OF_MONTH) - startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 + endTime.get(Calendar.HOUR_OF_DAY) * 60 + endTime.get(Calendar.MINUTE)) / getTotalMinute()
+//                        + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
+                float bottom = mHourHeight * i + mHourHeight
                         + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 
                 // Calculate left.
@@ -2792,13 +3019,13 @@ public class ScheduleView extends View {
         }
 
         int verticalOffset = 0;
-        if (hour > 24)
-            verticalOffset = mHourHeight * 24;
+        if (hour > getRowCount())
+            verticalOffset = mHourHeight * getRowCount();
         else if (hour > 0)
             verticalOffset = (int) (mHourHeight * hour);
 
-        if (verticalOffset > mHourHeight * 24 - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)
-            verticalOffset = (int) (mHourHeight * 24 - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom);
+        if (verticalOffset > mHourHeight * getRowCount() - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom)
+            verticalOffset = (int) (mHourHeight * getRowCount() - getHeight() + getDrawHeaderTop() + getDrawHeaderHeight() + mHeaderMarginBottom);
 
         mCurrentOrigin.y = -verticalOffset;
         invalidate();

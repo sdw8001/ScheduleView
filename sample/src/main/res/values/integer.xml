@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="timeStartHour">9</integer>
+    <integer name="timeStartMinute">0</integer>
+    <integer name="timeEndHour">18</integer>
+    <integer name="timeEndMinute">0</integer>
+    <integer name="timeDuration">30</integer>
+</resources>

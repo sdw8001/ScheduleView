@@ -1,9 +1,15 @@
 package com.github.sdw8001.sample;
 
+import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.provider.CalendarContract;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.graphics.ColorUtils;
 
 import com.github.sdw8001.scheduleview.event.ScheduleViewEvent;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -452,7 +458,32 @@ public class AppointmentEvent {
         this.disSeq = disSeq;
     }
 
+
+    private List<TypeDetailData> mTypeDetailDataList;
+
     public ScheduleViewEvent toScheduleViewEvent(){
+        mTypeDetailDataList = new ArrayList<>();
+        TypeDetailData typeDetailData = new TypeDetailData();
+        typeDetailData.setCode("001");
+        typeDetailData.setTypeDetail("s");
+        typeDetailData.setTypeDetailForeColor(-16777216);
+        typeDetailData.setTypeDetailBackColor(-65536);
+        mTypeDetailDataList.add(typeDetailData);
+
+        typeDetailData = new TypeDetailData();
+        typeDetailData.setCode("002");
+        typeDetailData.setTypeDetail("V");
+        typeDetailData.setTypeDetailForeColor(-12566464);
+        typeDetailData.setTypeDetailBackColor(-16711936);
+        mTypeDetailDataList.add(typeDetailData);
+
+        typeDetailData = new TypeDetailData();
+        typeDetailData.setCode("003");
+        typeDetailData.setTypeDetail("I");
+        typeDetailData.setTypeDetailForeColor(-2039584);
+        typeDetailData.setTypeDetailBackColor(-16777216);
+        mTypeDetailDataList.add(typeDetailData);
+
         Calendar startTime, endTime;
         ScheduleViewEvent event;
 
@@ -474,6 +505,56 @@ public class AppointmentEvent {
         event.setEndTime(endTime);
         event.setSplitUsing(ScheduleViewEvent.SPLIT_USING_KEY);
         event.setBackgroundColor(this.appColor);
+        int typeColor;
+        switch (cnt) {
+            case 4:
+                typeColor = Color.RED;
+                break;
+            case 2:
+                typeColor = Color.rgb(0, 160, 0);//Green
+                break;
+            case 3:
+                typeColor = Color.BLUE;
+                break;
+            default:
+                typeColor = this.appColor;
+                break;
+
+        }
+        event.setTypeColor(typeColor);
+        String typeDetail = "G";
+        int typeForeColor = this.appColor;
+        int typeBackColor = this.appColor;
+        switch (this.detailAppType) {
+            case "0":
+                typeDetail = "G";
+                typeForeColor = Color.parseColor("#9C27B0"); // Purple 500
+                break;
+            case "1":
+                typeDetail = "S";
+                typeForeColor = Color.parseColor("#4CAF50"); // Green 500
+                break;
+            case "2":
+                typeDetail = "R";
+                typeForeColor = Color.parseColor("#FF9800"); // Orange 500
+                break;
+            case "3":
+                typeDetail = "N";
+                typeForeColor = Color.parseColor("#1976D2"); // Blue 700
+                break;
+            default:
+                for(TypeDetailData data : mTypeDetailDataList) {
+                    if (data.getCode().equals(this.detailAppType)) {
+                        typeDetail = data.getTypeDetail();
+                        typeForeColor = data.getTypeDetailForeColor();
+                        typeBackColor = data.getTypeDetailBackColor();
+                        break;
+                    }
+                }
+        }
+        event.setTypeDetail(typeDetail);
+        event.setTypeDetailForeColor(typeForeColor);
+        event.setTypeDetailBackColor(typeBackColor);
 
         return event;
     }

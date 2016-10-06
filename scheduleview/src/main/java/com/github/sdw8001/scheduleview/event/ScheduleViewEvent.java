@@ -1,5 +1,7 @@
 package com.github.sdw8001.scheduleview.event;
 
+import android.graphics.Bitmap;
+
 import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
 
 import java.util.ArrayList;
@@ -28,7 +30,10 @@ public class ScheduleViewEvent {
     private Calendar mStartTime;
     private Calendar mEndTime;
     private int mBackgroundColor;
-
+    private int mTypeColor;
+    private String mTypeDetail;
+    private int mTypeDetailForeColor;
+    private int mTypeDetailBackColor;
 
     public ScheduleViewEvent() {
 
@@ -90,6 +95,38 @@ public class ScheduleViewEvent {
         this.mBackgroundColor = mBackgroundColor;
     }
 
+    public int getTypeColor() {
+        return mTypeColor;
+    }
+
+    public void setTypeColor(int mTypeColor) {
+        this.mTypeColor = mTypeColor;
+    }
+
+    public int getTypeDetailBackColor() {
+        return mTypeDetailBackColor;
+    }
+
+    public void setTypeDetailBackColor(int mTypeDetailBackColor) {
+        this.mTypeDetailBackColor = mTypeDetailBackColor;
+    }
+
+    public int getTypeDetailForeColor() {
+        return mTypeDetailForeColor;
+    }
+
+    public void setTypeDetailForeColor(int mTypeDetailForeColor) {
+        this.mTypeDetailForeColor = mTypeDetailForeColor;
+    }
+
+    public String getTypeDetail() {
+        return mTypeDetail;
+    }
+
+    public void setTypeDetail(String mTypeDetail) {
+        this.mTypeDetail = mTypeDetail;
+    }
+
     /***
      * 이 Event 의 StartTime 과 EndTime 이 같은 날이 아닌 경우 Event 를 날짜별로 분할하여 List 로 반환합니다.(일자별 표시할때 다른일자로 Display 하기 위해 사용.)
      * @return
@@ -114,6 +151,10 @@ public class ScheduleViewEvent {
             event1.setHeaderKey(this.getHeaderKey());
             event1.setParentHeaderKey(this.getParentHeaderKey());
             event1.setSplitUsing(this.getSplitUsing());
+            event1.setTypeColor(this.getTypeColor());
+            event1.setTypeDetail(this.getTypeDetail());
+            event1.setTypeDetailForeColor(this.getTypeDetailForeColor());
+            event1.setTypeDetailBackColor(this.getTypeDetailBackColor());
 
             events.add(event1);
 
@@ -137,6 +178,10 @@ public class ScheduleViewEvent {
                 eventMore.setHeaderKey(this.getHeaderKey());
                 eventMore.setParentHeaderKey(this.getParentHeaderKey());
                 eventMore.setSplitUsing(this.getSplitUsing());
+                eventMore.setTypeColor(this.getTypeColor());
+                eventMore.setTypeDetail(this.getTypeDetail());
+                eventMore.setTypeDetailForeColor(this.getTypeDetailForeColor());
+                eventMore.setTypeDetailBackColor(this.getTypeDetailBackColor());
 
                 events.add(eventMore);
 
@@ -157,6 +202,10 @@ public class ScheduleViewEvent {
             event2.setHeaderKey(this.getHeaderKey());
             event2.setParentHeaderKey(this.getParentHeaderKey());
             event2.setSplitUsing(this.getSplitUsing());
+            event2.setTypeColor(this.getTypeColor());
+            event2.setTypeDetail(this.getTypeDetail());
+            event2.setTypeDetailForeColor(this.getTypeDetailForeColor());
+            event2.setTypeDetailBackColor(this.getTypeDetailBackColor());
 
             events.add(event2);
         } else {

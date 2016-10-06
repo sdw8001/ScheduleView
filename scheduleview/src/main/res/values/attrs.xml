@@ -9,6 +9,11 @@
         <enum name="friday" value="6" />
         <enum name="saturday" value="7" />
     </attr>
+    <attr name="timeStartHour" format="dimension" />
+    <attr name="timeStartMinute" format="dimension" />
+    <attr name="timeEndHour" format="dimension" />
+    <attr name="timeEndMinute" format="dimension" />
+    <attr name="timeDuration" format="dimension" />
     <attr name="hourHeight" format="dimension" />
     <attr name="minHourHeight" format="dimension" />
     <attr name="maxHourHeight" format="dimension" />
@@ -117,6 +122,11 @@
         <attr name="scrollDuration" />
     </declare-styleable>
     <declare-styleable name="ScheduleView">
+        <attr name="timeStartHour" />
+        <attr name="timeStartMinute" />
+        <attr name="timeEndHour" />
+        <attr name="timeEndMinute" />
+        <attr name="timeDuration" />
         <attr name="firstDayOfWeek" />
         <attr name="hourHeight" />
         <attr name="minHourHeight" />

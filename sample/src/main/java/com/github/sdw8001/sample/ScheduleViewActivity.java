@@ -44,6 +44,7 @@ public class ScheduleViewActivity extends AppCompatActivity
     private final static String SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE = "SAVE_INSTANCE_STATE_SCHEDULE_FOCUSED_DATE";
     private final static String SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER = "SAVE_INSTANCE_STATE_SCHEDULE_FIXED_GROUP_HEADER";
 
+    private List<TypeDetailData> mTypeDetailDataList;
     private List<AppointmentEvent> mAppointmentList;
     private ScheduleView mScheduleView;
 
@@ -68,6 +69,11 @@ public class ScheduleViewActivity extends AppCompatActivity
         });
 
         mScheduleView = (ScheduleView) findViewById(R.id.scheduleView);
+        mScheduleView.setTimeStartHour(10);
+        mScheduleView.setTimeStartMinute(30);
+        mScheduleView.setTimeEndHour(19);
+        mScheduleView.setTimeEndMinute(30);
+        mScheduleView.setTimeDuration(60);
         mScheduleView.setNumberOfVisibleDays(25);
         mScheduleView.setScheduleLoadListener(this);
         mScheduleView.setEventDrawListener(this);
@@ -181,7 +187,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setSlot("4");
         appointmentEvent.setSlotName("1");
         appointmentEvent.setSpecialType(-32640);
-        appointmentEvent.setCnt(0);
+        appointmentEvent.setCnt(2);
         appointmentEvent.setChartId("19311202001");
         appointmentEvent.setName2("신현목");
         appointmentEvent.setTelNo("041-579-1565");
@@ -189,7 +195,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setCrmGubun("");
         appointmentEvent.setNurse("");
         appointmentEvent.setMergeCnt(3);
-        appointmentEvent.setDetailAppType("0");
+        appointmentEvent.setDetailAppType("001");
         appointmentEvent.setAppType("0");
         appointmentEvent.setChangeType("1");
         appointmentEvent.setTreatmentKind("0");
@@ -223,7 +229,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setSlot("4");
         appointmentEvent.setSlotName("1");
         appointmentEvent.setSpecialType(-256);
-        appointmentEvent.setCnt(0);
+        appointmentEvent.setCnt(4);
         appointmentEvent.setChartId("19830409009");
         appointmentEvent.setName2("덴탑");
         appointmentEvent.setTelNo("");
@@ -273,7 +279,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setCrmGubun("동의서OK");
         appointmentEvent.setNurse("");
         appointmentEvent.setMergeCnt(3);
-        appointmentEvent.setDetailAppType("0");
+        appointmentEvent.setDetailAppType("003");
         appointmentEvent.setAppType("0");
         appointmentEvent.setChangeType("1");
         appointmentEvent.setTreatmentKind("0");
@@ -357,7 +363,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setCrmGubun("");
         appointmentEvent.setNurse("");
         appointmentEvent.setMergeCnt(1);
-        appointmentEvent.setDetailAppType("0");
+        appointmentEvent.setDetailAppType("2");
         appointmentEvent.setAppType("0");
         appointmentEvent.setChangeType("1");
         appointmentEvent.setTreatmentKind("0");
@@ -399,7 +405,7 @@ public class ScheduleViewActivity extends AppCompatActivity
         appointmentEvent.setCrmGubun("");
         appointmentEvent.setNurse("");
         appointmentEvent.setMergeCnt(2);
-        appointmentEvent.setDetailAppType("001");
+        appointmentEvent.setDetailAppType("1");
         appointmentEvent.setAppType("0");
         appointmentEvent.setChangeType("1");
         appointmentEvent.setTreatmentKind("1");

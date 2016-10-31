@@ -2327,24 +2327,23 @@ public class ScheduleView extends View {
      * @param numberOfVisibleDays The number of visible days in a week.
      */
     public void setNumberOfVisibleDays(int numberOfVisibleDays) {
-        mCachedNumberOfVisible = numberOfVisibleDays;
-
-        if (mGroupHeaderItems != null && getHeaderItemSize() < numberOfVisibleDays)
-            this.mNumberOfVisibleDays = getHeaderItemSize();
-        else
-            this.mNumberOfVisibleDays = numberOfVisibleDays;
-        mCurrentOrigin.x = 0;
-        mCurrentOrigin.y = 0;
-        invalidate();
+        this.setNumberOfVisibleDays(numberOfVisibleDays, true);
     }
 
     public void setNumberOfVisibleDays(int numberOfVisibleDays, boolean refresh) {
         mCachedNumberOfVisible = numberOfVisibleDays;
 
-        if (mGroupHeaderItems != null && getHeaderItemSize() < numberOfVisibleDays)
-            this.mNumberOfVisibleDays = getHeaderItemSize();
+        // HeaderItemSize 가 0 이거나 0 보다 작은경우 numberOfVisibleDays 로 적용
+        int headerItemSize = getHeaderItemSize();
+        if (headerItemSize <= 0)
+            headerItemSize = numberOfVisibleDays;
+
+        // Header 의 SubHeader 유부에 따라 HeaderSize 를 계산
+        if (mGroupHeaderItems != null && headerItemSize < numberOfVisibleDays)
+            this.mNumberOfVisibleDays = headerItemSize;
         else
             this.mNumberOfVisibleDays = numberOfVisibleDays;
+
         if (refresh) {
             mCurrentOrigin.x = 0;
             mCurrentOrigin.y = 0;

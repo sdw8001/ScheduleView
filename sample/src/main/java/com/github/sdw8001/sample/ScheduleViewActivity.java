@@ -69,12 +69,12 @@ public class ScheduleViewActivity extends AppCompatActivity
         });
 
         mScheduleView = (ScheduleView) findViewById(R.id.scheduleView);
-        mScheduleView.setTimeStartHour(10);
-        mScheduleView.setTimeStartMinute(30);
+        mScheduleView.setTimeStartHour(9);
+        mScheduleView.setTimeStartMinute(0);
         mScheduleView.setTimeEndHour(19);
         mScheduleView.setTimeEndMinute(30);
-        mScheduleView.setTimeDuration(60);
-        mScheduleView.setNumberOfVisibleDays(25);
+        mScheduleView.setTimeDuration(30);
+        mScheduleView.setNumberOfVisibleDays(5);
         mScheduleView.setScheduleLoadListener(this);
         mScheduleView.setEventDrawListener(this);
         mScheduleView.setOnEventClickListener(this);

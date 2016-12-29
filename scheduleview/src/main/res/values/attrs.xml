@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
+    <attr name="headerBackgroundColor" format="color" />
+    <attr name="cellMargin" format="dimension" />
+    <attr name="cellMarginLeft" format="dimension" />
+    <attr name="cellMarginTop" format="dimension" />
+    <attr name="cellMarginRight" format="dimension" />
+    <attr name="cellMarginBottom" format="dimension" />
+    <attr name="timeStartHour" format="dimension" />
+    <attr name="timeStartMinute" format="dimension" />
+    <attr name="timeEndHour" format="dimension" />
+    <attr name="timeEndMinute" format="dimension" />
+    <attr name="timeDuration" format="dimension" />
+
+
     <attr name="firstDayOfWeek" format="enum">
         <enum name="sunday" value="1" />
         <enum name="monday" value="2" />
@@ -9,11 +23,6 @@
         <enum name="friday" value="6" />
         <enum name="saturday" value="7" />
     </attr>
-    <attr name="timeStartHour" format="dimension" />
-    <attr name="timeStartMinute" format="dimension" />
-    <attr name="timeEndHour" format="dimension" />
-    <attr name="timeEndMinute" format="dimension" />
-    <attr name="timeDuration" format="dimension" />
     <attr name="hourHeight" format="dimension" />
     <attr name="minHourHeight" format="dimension" />
     <attr name="maxHourHeight" format="dimension" />
@@ -182,5 +191,18 @@
         <attr name="scrollDuration" />
         <attr name="headerType" />
         <attr name="viewMode" />
+    </declare-styleable>
+    <declare-styleable name="ScheduleViewGroup">
+        <attr name="headerBackgroundColor" />
+        <attr name="cellMargin" />
+        <attr name="cellMarginLeft" />
+        <attr name="cellMarginTop" />
+        <attr name="cellMarginRight" />
+        <attr name="cellMarginBottom" />
+        <attr name="timeStartHour" />
+        <attr name="timeStartMinute" />
+        <attr name="timeEndHour" />
+        <attr name="timeEndMinute" />
+        <attr name="timeDuration" />
     </declare-styleable>
 </resources>

@@ -16,4 +16,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/schedule_view_activity_name"/>
+    <Button
+        android:id="@+id/Button_ScheduleViewGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/Button_ScheduleView"
+        android:text="@string/schedule_view_group_activity_name"/>
 </RelativeLayout>

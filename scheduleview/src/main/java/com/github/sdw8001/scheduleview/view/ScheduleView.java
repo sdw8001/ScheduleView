@@ -15,6 +15,7 @@ import android.graphics.RectF;
 import android.graphics.Region;
 import android.graphics.Typeface;
 import android.os.Build;
+import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
@@ -37,6 +38,7 @@ import android.view.ScaleGestureDetector;
 import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewGroup;
 import android.view.ViewOutlineProvider;
 import android.widget.OverScroller;
 
@@ -50,6 +52,8 @@ import com.github.sdw8001.scheduleview.loader.ScheduleLoader;
 import com.github.sdw8001.scheduleview.loader.ScheduleViewLoader;
 import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -62,7 +66,11 @@ import java.util.Locale;
  * Created by sdw80 on 2016-04-21.
  *
  */
-public class ScheduleView extends View {
+public class ScheduleView extends ViewGroup {
+    @Override
+    protected void onLayout(boolean changed, int l, int t, int r, int b) {
+
+    }
 
     private enum Direction {
         NONE, LEFT, RIGHT, VERTICAL
@@ -72,6 +80,11 @@ public class ScheduleView extends View {
         WEEK_DATE_SEEKER_AREA, SCHEDULE_AREA, WEEK_CURRENT_DATE_AREA, NONE_TOUCH
     }
 
+    @Retention(RetentionPolicy.RUNTIME)
+    @IntDef({VIEW_PARENT, VIEW_CHILD})
+    public @interface ViewMode {
+
+    }
     public static final int VIEW_PARENT = 1;
     public static final int VIEW_CHILD = 2;
 
@@ -240,6 +253,7 @@ public class ScheduleView extends View {
     private boolean mShowDistinctWeekendColor = false;
     private boolean mShowDistinctPastFutureColor = false;
     private boolean mWeekDateVisible = false;
+    @ViewMode
     private int mViewMode = VIEW_PARENT;
     private Calendar mScrollToDay = null;
     private double mScrollToHour = -1;
@@ -280,7 +294,7 @@ public class ScheduleView extends View {
 
     public ScheduleView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-
+        setWillNotDraw(false);
         mContext = context;
         mOrientation = mContext.getResources().getConfiguration().orientation;
 
@@ -357,7 +371,14 @@ public class ScheduleView extends View {
             mEventCornerRadius = a.getDimensionPixelSize(R.styleable.ScheduleView_eventCornerRadius, mEventCornerRadius);
             mShowDistinctPastFutureColor = a.getBoolean(R.styleable.ScheduleView_showDistinctPastFutureColor, mShowDistinctPastFutureColor);
             mShowDistinctWeekendColor = a.getBoolean(R.styleable.ScheduleView_showDistinctWeekendColor, mShowDistinctWeekendColor);
-            mViewMode = a.getInteger(R.styleable.ScheduleView_viewMode, mViewMode);
+            switch (a.getInteger(R.styleable.ScheduleView_viewMode, mViewMode)) {
+                case VIEW_CHILD:
+                    mViewMode = VIEW_CHILD;
+                    break;
+                case VIEW_PARENT:
+                    mViewMode = VIEW_PARENT;
+                    break;
+            }
 //            mShowNowLine = a.getBoolean(R.styleable.ScheduleView_showNowLine, mShowNowLine);
             mEventRectShadowRadius = a.getDimensionPixelSize(R.styleable.ScheduleView_eventRectShadowRadius, mEventRectShadowRadius);
             mHeaderRowShadowRadius = a.getDimensionPixelSize(R.styleable.ScheduleView_headerRowShadowRadius, mHeaderRowShadowRadius);
@@ -2083,7 +2104,7 @@ public class ScheduleView extends View {
         return mViewMode;
     }
 
-    public void setViewMode(int viewMode, boolean refresh) {
+    public void setViewMode(final @ViewMode int viewMode, boolean refresh) {
         this.mViewMode = viewMode;
         this.mFixedGroupHeader = null;
         this.setNumberOfVisibleDays(mCachedNumberOfVisible, refresh);
@@ -2731,15 +2752,6 @@ public class ScheduleView extends View {
 
         for (Header header : getHeaderItems()) {
             for (int i = 0; i < getRowCount(); i++) {
-                /*
-                Calendar startTime = ScheduleViewUtil.today();
-                startTime.set(Calendar.HOUR_OF_DAY, i);
-                startTime.set(Calendar.MINUTE, 0);
-                startTime.set(Calendar.SECOND, 0);
-                startTime.set(Calendar.MILLISECOND, 0);
-                Calendar endTime = (Calendar) startTime.clone();
-                endTime.set(Calendar.HOUR_OF_DAY, i + 1);
-                */
                 Calendar startTime, endTime;
 //                startTime = ScheduleViewUtil.today();
                 startTime = (Calendar) mTimeStart.clone();
@@ -2748,14 +2760,10 @@ public class ScheduleView extends View {
                 endTime.add(Calendar.MINUTE, mTimeDuration);
 
                 // Calculate top.
-//                float top = mHourHeight * getRowCount() * (startTime.get(Calendar.HOUR_OF_DAY) * 60 + startTime.get(Calendar.MINUTE)) / getTotalMinute()
-//                        + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
                 float top = mHourHeight * i
                         + mCurrentOrigin.y + getDrawEventsTop() + mEventMarginTop;
 
                 // Calculate bottom.
-//                float bottom = mHourHeight * getRowCount() * ((endTime.get(Calendar.DAY_OF_MONTH) - startTime.get(Calendar.DAY_OF_MONTH)) * 60 * 24 + endTime.get(Calendar.HOUR_OF_DAY) * 60 + endTime.get(Calendar.MINUTE)) / getTotalMinute()
-//                        + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
                 float bottom = mHourHeight * i + mHourHeight
                         + mCurrentOrigin.y + getDrawEventsTop() - mEventMarginBottom;
 

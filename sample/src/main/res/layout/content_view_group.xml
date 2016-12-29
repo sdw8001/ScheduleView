@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_view_group"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    tools:context="com.github.sdw8001.sample.ViewGroupActivity"
+    tools:showIn="@layout/activity_view_group">
+
+    <LinearLayout
+        android:id="@+id/LinearLayout_Colors"
+        android:layout_width="500dp"
+        android:layout_height="wrap_content"
+        android:background="@color/gray">
+
+        <Button
+            android:id="@+id/ButtonColorGreen"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Green" />
+
+        <Button
+            android:id="@+id/ButtonColorRed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Red" />
+
+        <Button
+            android:id="@+id/ButtonEventLoad"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Red" />
+
+        <Button
+            android:id="@+id/ButtonEventRemove"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Red" />
+    </LinearLayout>
+
+    <com.github.sdw8001.scheduleview.view.ScheduleViewGroup
+        android:id="@+id/ScheduleViewGroup"
+        android:layout_width="1000dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/LinearLayout_Colors"
+        app:headerBackgroundColor="#FF738FFE"/>
+
+</RelativeLayout>

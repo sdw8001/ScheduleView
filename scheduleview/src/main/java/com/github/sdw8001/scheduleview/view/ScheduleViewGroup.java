@@ -61,6 +61,10 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         NONE, LEFT, RIGHT, VERTICAL
     }
 
+    private enum ScaleDirection {
+        NONE, HORIZONTAL, VERTICAL
+    }
+
     private Context mContext;
     private HeaderLoader mHeaderLoader;
     private EventLoader mEventLoader;
@@ -79,6 +83,7 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
     private PointF mCurrentOrigin = new PointF(0f, 0f);
     private Direction mCurrentScrollDirection = Direction.NONE;
     private Direction mCurrentFlingDirection = Direction.NONE;
+    private ScaleDirection mCurrentScaleDirection = ScaleDirection.NONE;
     private ScaleGestureDetector mScaleDetector;
     private GestureDetectorCompat mGestureDetector;
     private OverScroller mScroller;
@@ -162,8 +167,6 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         this.setClickable(true);
         this.setOnDragListener(new DragListener());
         this.setBackgroundColor(Color.WHITE);
-//        this.setMotionEventSplittingEnabled(false);
-        mTouchSlop = ViewConfiguration.get(mContext).getScaledTouchSlop();
 
         // ScheduleTimeManager 설정
         mTimeManager = new ScheduleTimeManager(mTimeStartHour, mTimeStartMinute, mTimeEndHour, mTimeEndMinute, mTimeDuration);
@@ -190,17 +193,24 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
             @Override
             public boolean onScale(ScaleGestureDetector detector) {
-                mNewHourHeight = Math.round(mHourHeight * detector.getScaleFactor());
+                if (mCurrentScaleDirection == ScaleDirection.VERTICAL) {
+                    // 세로 Scale 적용
 
-                // 최소 HourHeight 보다 작으면
-                if (mNewHourHeight < mMinHourHeight ) {
-                    mHourHeight = mMinHourHeight;
-                    mNewHourHeight = -1;
-                }
-                // 최대 HourHeight 보다 크면
-                if (mNewHourHeight > mMaxHourHeight) {
-                    mHourHeight = mMaxHourHeight;
-                    mNewHourHeight = -1;
+                    mNewHourHeight = Math.round(mHourHeight * detector.getScaleFactor());
+
+                    // 최소 HourHeight 보다 작으면
+                    if (mNewHourHeight <= mMinHourHeight) {
+                        mHourHeight = mMinHourHeight;
+                        mNewHourHeight = -1;
+                    }
+                    // 최대 HourHeight 보다 크면
+                    if (mNewHourHeight >= mMaxHourHeight) {
+                        mHourHeight = mMaxHourHeight;
+                        mNewHourHeight = -1;
+                    }
+                } else if (mCurrentScaleDirection == ScaleDirection.HORIZONTAL) {
+                    // 가로 Scale 적용
+                    mScaleFactor = detector.getScaleFactor();
                 }
                 requestLayout();
                 return true;
@@ -588,17 +598,16 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 //                childAppView.setChecked(false);
             }
         }
-        if (v instanceof AppointmentView) {
-            AppointmentView view = (AppointmentView) v;
-//            Log.e(view.getText().toString(), view.isChecked() ? "true" : "false");
-//            view.setChecked(!view.isChecked());
-        }
         if (v instanceof ScheduleEventView) {
             ScheduleEventView view = (ScheduleEventView) v;
 
             Toast.makeText(mContext, view.getContents(), Toast.LENGTH_SHORT).show();
         }
     }
+
+    private float mScaleFactor = 1;
+    private boolean mFirstLoad = true;
+    private int mDesiredWidth;
 
     /*
      * 넘어오는 파라메터는 부모뷰로부터 결정된 치수제한을 의미한다.
@@ -619,22 +628,68 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
      */
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        final int specModeWidth = MeasureSpec.getMode(widthMeasureSpec);
-        final int specModeHeight = MeasureSpec.getMode(heightMeasureSpec);
         final int specSizeWidth = MeasureSpec.getSize(widthMeasureSpec);
         final int specSizeHeight = MeasureSpec.getSize(heightMeasureSpec);
 
-        final int desiredWidth = specSizeWidth - getPaddingLeft() - getPaddingRight();
+        final int desiredWidth = mDesiredWidth = specSizeWidth - getPaddingLeft() - getPaddingRight();
         final int desiredHeight = specSizeHeight - getPaddingTop() - getPaddingBottom();
 
-        // mColumnWidth 의 정의와 개념 : ColumnMarginLeft + ColumnPaddingLeft + ColumnWidth + ColumnPaddingRight + ColumnMarginRight
-        mColumnWidth = desiredWidth / columnCount;
+        final int timeRowCount = mTimeManager.getTimeCount();
+
+        if (mFirstLoad) {
+            mColumnWidth = desiredWidth / columnCount;
+            mFirstLoad = false;
+        }
+        if (mScaleFactor != 1) {
+            // CurrentOriginX 계산
+            if ((int) (mColumnWidth * mScaleFactor) < mDesiredWidth / 2)
+                mCurrentOrigin.x = ((mCurrentOrigin.x - mMidPointX) / mColumnWidth) * mColumnWidth * mScaleFactor + mMidPointX;
+
+            // Scaled ColumnWidth 계산
+            mColumnWidth = (int) (mColumnWidth * mScaleFactor);
+
+            if (mColumnWidth * getHeaderSize() < desiredWidth)
+                mColumnWidth = desiredWidth / getHeaderSize();
+
+            if (mColumnWidth > desiredWidth / 2)
+                mColumnWidth = desiredWidth / 2;
+
+            mScaleFactor = 1;
+        }
+
+        /* MinHourHeight 동적 정의. EventDrawRect 범위의 Height 값과 TimeStart, TimeEnd, TimeDuration 값에 따른 Row 수에 영향을 받아
+           동적으로 MinHeight 를 계산한다. */
+        mMinHourHeight = (desiredHeight - getDrawEventsTop() - (mCellMarginTop + mCellMarginBottom) * timeRowCount) / timeRowCount ;
 
         // mHourHeight 설정(zoom 으로 변경된 Scale 적용)
         if (mNewHourHeight > mMinHourHeight && mNewHourHeight < mMaxHourHeight) {
             mCurrentOrigin.y = ((mCurrentOrigin.y - mMidPointY) / mHourHeight) * mNewHourHeight + mMidPointY;
             mHourHeight = mNewHourHeight;
             mNewHourHeight = -1;
+        }
+
+        // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
+        if (mCurrentOrigin.y < getHeight() - getDrawEventsTop() - (mCellMarginTop + mHourHeight + mCellMarginBottom) * mTimeManager.getTimeCount())
+            mCurrentOrigin.y = getHeight() - getDrawEventsTop() - (mCellMarginTop + mHourHeight + mCellMarginBottom) * mTimeManager.getTimeCount();
+
+        // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
+        if (mCurrentOrigin.y > 0) {
+            mCurrentOrigin.y = 0;
+        }
+
+        // Scroll 된 offset 설정
+        int shiftColumnCount = (int) -(Math.ceil(mCurrentOrigin.x / mColumnWidth));
+
+        // mCurrentOrigin.x 값이 HeaderViewList 의 범위를 벗어날 경우 사용가능한 값으로 설정
+        if (shiftColumnCount < 0) {
+            mCurrentOrigin.x = 0;
+            mScroller.forceFinished(true);
+        }
+
+        // mCurrentOrigin.x 값이 HeaderViewList 의 범위를 벗어날 경우 사용가능한 값으로 설정
+        if (mHeaders != null && (-mCurrentOrigin.x) + desiredWidth > getHeaderSize() * mColumnWidth && getHeaderSize() >= 0) {
+            mCurrentOrigin.x = desiredWidth - (getHeaderSize() * mColumnWidth);
+            mScroller.forceFinished(true);
         }
 
         setMeasuredDimension(specSizeWidth, specSizeHeight);
@@ -675,32 +730,6 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
             }
 
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
-        }
-
-        // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mCurrentOrigin.y < getHeight() - getDrawEventsTop() - (mCellMarginTop + mHourHeight + mCellMarginBottom) * mTimeManager.getTimeCount())
-            mCurrentOrigin.y = getHeight() - getDrawEventsTop() - (mCellMarginTop + mHourHeight + mCellMarginBottom) * mTimeManager.getTimeCount();
-
-        // mCurrentOrigin.y 값이 View 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mCurrentOrigin.y > 0) {
-            mCurrentOrigin.y = 0;
-        }
-
-        // Scroll 된 offset 설정
-        int shiftColumnCount = (int) -(Math.ceil(mCurrentOrigin.x / mColumnWidth));
-
-        // mCurrentOrigin.x 값이 HeaderViewList 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (shiftColumnCount < 0) {
-            shiftColumnCount = 0;
-            mCurrentOrigin.x = 0;
-            mScroller.forceFinished(true);
-        }
-
-        // mCurrentOrigin.x 값이 HeaderViewList 의 범위를 벗어날 경우 사용가능한 값으로 설정
-        if (mHeaders != null && shiftColumnCount + columnCount > getHeaderSize() - 1 && getHeaderSize() >= 0) {
-            shiftColumnCount = getHeaderSize() - columnCount;
-            mCurrentOrigin.x = -(shiftColumnCount * mColumnWidth);
-            mScroller.forceFinished(true);
         }
     }
 
@@ -845,37 +874,44 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         return null;
     }
 
-    // 시작 위치를 저장을 위한 변수 
-    private float mLastMotionOneX = 0;
-    private float mLastMotionOneY = 0;
-    private float mLastMotionTwoX = 0;
-    private float mLastMotionTwoY = 0;
+    // 이동거리 저장을 위한 변수 
+    private float mDistanceX = 0;
+    private float mDistanceY = 0;
     private float mMidPointX = 0;
     private float mMidPointY = 0;
-    //  마우스 move 로 일정범위 벗어나면 취소하기 위한  값
-    private int mTouchSlop;
 
     private int mMinHourHeight = 70;
-    private int mMaxHourHeight = 300;
+    private int mMaxHourHeight = 500;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         boolean onTouched;
 
         final int action = event.getAction();
-        final int pointerCount = event.getPointerCount();
         switch (action & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                mLastMotionOneX = event.getX();
-                mLastMotionOneY = event.getY();    // 시작 위치 저장
+            case MotionEvent.ACTION_MOVE:
+                if (event.getPointerCount() > 1) {
+                    final float currentDistanceX = Math.abs(event.getX() - event.getX(event.findPointerIndex(1)));
+                    final float currentDistanceY = Math.abs(event.getY() - event.getY(event.findPointerIndex(1)));
+
+                    // X축과 Y축의 각 두 Pointer 의 이동 거리를 계산하여 더 많이 이동한 거리에 맞도록 ScaleDirection 설정.
+                    if (Math.abs(currentDistanceX - mDistanceX) > Math.abs(currentDistanceY - mDistanceY)) {
+                        mCurrentScaleDirection = ScaleDirection.HORIZONTAL;
+                    } else {
+                        mCurrentScaleDirection = ScaleDirection.VERTICAL;
+                    }
+
+                    // 다음 Move 시 사용하기위한 이전 DistanceX,Y 값 설정.
+                    mDistanceX = currentDistanceX;
+                    mDistanceY = currentDistanceY;
+                }
                 break;
 
             case MotionEvent.ACTION_POINTER_DOWN:
-                mLastMotionTwoX = event.getX();
-                mLastMotionTwoY = event.getY();
-                mMidPointX = (mLastMotionOneX + mLastMotionTwoX) / 2;
-                mMidPointY = (mLastMotionOneY + mLastMotionTwoY - getDrawEventsTop() * 2) / 2;
+                mMidPointX = (event.getX() + event.getX(event.findPointerIndex(1))) / 2;
+                mMidPointY = (event.getY() + event.getY(event.findPointerIndex(1)) - getDrawEventsTop() * 2) / 2;
                 break;
+
             case MotionEvent.ACTION_UP:
                 setScheduleClick(event);
                 break;
@@ -918,6 +954,10 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                 break;
         }
         int nearestColumnX = (int) (mCurrentOrigin.x - (shiftColumnCount * mColumnWidth));
+        // nearestColumnX 좌표에 이동할 때, 좌표가 오른쪽 끝 좌표이면 이동하지않는다. nearestColumnX = 0
+        if ((int) (Math.abs(mCurrentOrigin.x) + mDesiredWidth) == getHeaderSize() * mColumnWidth) {
+            nearestColumnX = 0;
+        }
 
         if (nearestColumnX != 0) {
             // Stop current animation.

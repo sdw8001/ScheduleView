@@ -1036,6 +1036,9 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
     private int mMinHourHeight = 70;
     private int mMaxHourHeight = 500;
+    private float mMovedSlop = 15;
+    private float mTouchDownX, mTouchDownY;
+    private boolean isScheduleTouched;
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -1043,6 +1046,12 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
         final int action = event.getAction();
         switch (action & MotionEvent.ACTION_MASK) {
+            case MotionEvent.ACTION_DOWN:
+                mTouchDownX = event.getX();
+                mTouchDownY = event.getY();
+                isScheduleTouched = true;
+                break;
+
             case MotionEvent.ACTION_MOVE:
                 if (event.getPointerCount() > 1) {
                     final float currentDistanceX = Math.abs(event.getX() - event.getX(event.findPointerIndex(1)));
@@ -1059,6 +1068,8 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                     mDistanceX = currentDistanceX;
                     mDistanceY = currentDistanceY;
                 }
+                if (Math.abs(mTouchDownX - event.getX()) > mMovedSlop || Math.abs(mTouchDownY - event.getY()) > mMovedSlop)
+                    isScheduleTouched = false;
                 break;
 
             case MotionEvent.ACTION_POINTER_DOWN:
@@ -1067,7 +1078,9 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                 break;
 
             case MotionEvent.ACTION_UP:
-                setScheduleClick(event);
+                if (isScheduleTouched) {
+                    setScheduleClick(event);
+                }
                 break;
         }
 
@@ -1394,6 +1407,25 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                 scheduleCellView = (ScheduleCellView) getChildAt(i);
                 if (scheduleCellView.getBounds().contains((int) x, (int) y))
                     return scheduleCellView;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 좌표 x, y 를 포함하는 ScheduleCellView 를 반환한다. 해당 View 가 없으면 null 반환.
+     * @param x 좌표 x
+     * @param y 좌표 y
+     * @return 좌표 x, y 를 포함하는 ScheduleCellView
+     */
+    private ScheduleEventView findScheduleEventView(float x, float y) {
+        int childCount = getChildCount();
+        ScheduleEventView scheduleEventView;
+        for (int i = 0; i < childCount; i++) {
+            if (getChildAt(i) instanceof ScheduleEventView) {
+                scheduleEventView = (ScheduleEventView) getChildAt(i);
+                if (scheduleEventView.getBounds().contains((int) x, (int) y))
+                    return scheduleEventView;
             }
         }
         return null;

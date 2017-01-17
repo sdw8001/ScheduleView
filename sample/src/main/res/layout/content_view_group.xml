@@ -49,6 +49,11 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/LinearLayout_Colors"
+        app:timeStartHour="8"
+        app:timeStartMinute="30"
+        app:timeEndHour="14"
+        app:timeEndMinute="40"
+        app:timeDuration="30"
         app:headerBackgroundColor="#FF738FFE"
         app:headerHeight="40dp" />
 

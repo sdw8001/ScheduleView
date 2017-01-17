@@ -8,8 +8,11 @@ import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.graphics.PointF;
 import android.graphics.Rect;
+import android.graphics.RectF;
+import android.graphics.Region;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
 import android.graphics.drawable.StateListDrawable;
@@ -21,12 +24,14 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.ViewCompat;
 import android.support.v4.view.animation.FastOutLinearInInterpolator;
 import android.text.TextUtils;
+import android.text.format.DateFormat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.DragEvent;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.SoundEffectConstants;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Checkable;
@@ -38,24 +43,29 @@ import com.github.sdw8001.scheduleview.R;
 import com.github.sdw8001.scheduleview.event.ScheduleEvent;
 import com.github.sdw8001.scheduleview.header.ScheduleHeader;
 import com.github.sdw8001.scheduleview.header.TreeNode;
+import com.github.sdw8001.scheduleview.interpreter.TimeInterpreter;
 import com.github.sdw8001.scheduleview.loader.EventLoader;
 import com.github.sdw8001.scheduleview.loader.HeaderLoader;
 import com.github.sdw8001.scheduleview.util.ScheduleTimeManager;
+import com.github.sdw8001.scheduleview.util.ScheduleViewUtil;
 import com.github.sdw8001.scheduleview.util.TimeStartEnd;
 import com.github.sdw8001.scheduleview.view.layout.CheckableHeaderView;
 import com.github.sdw8001.scheduleview.view.layout.ScheduleCellView;
 import com.github.sdw8001.scheduleview.view.layout.ScheduleEventView;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by sdw80 on 2016-11-07.
  * Test
  */
 
-public class ScheduleViewGroup extends FrameLayout implements View.OnClickListener, ScheduleEventView.OnCheckedChangeListener, ScheduleEventView.OnLongClickListener {
+public class ScheduleViewGroup extends FrameLayout implements View.OnClickListener, ScheduleCellView.OnCheckedChangeListener,
+        ScheduleEventView.OnCheckedChangeListener, ScheduleEventView.OnLongClickListener {
 
     private enum Direction {
         NONE, LEFT, RIGHT, VERTICAL
@@ -73,7 +83,7 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
     private boolean mHorizontalFlingEnabled = true;
     private boolean mVerticalFlingEnabled = false;
     private int mColumnWidth = 1;
-    private int mHeaderHeight = 100;
+    private int mHeaderHeight = 50;
     private int mHourHeight = 200;
     private int mNewHourHeight = -1;
     private int mMinimumFlingVelocity = 0;
@@ -93,7 +103,13 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
     private List<? extends ScheduleEvent> mEvents;
 
     // 임시 변수. 정확한 로직 확립 후 변경가능성이 큰 변수.
-    private int mHeaderRowCount;
+    private Paint mTimeBackgroundPaint;
+    private Paint mTimeTextPaint;
+    private Paint mTimeLinePaint;
+    private Paint mTimeCurrentLinePaint;
+    private int mTimeWidth = 100;
+    private int mTimeTextSize = 12;
+    private int mTimeTextColor = Color.BLACK;
 
     // Attribute 정의
     private int mHeaderBackgroundColor = Color.WHITE;
@@ -102,11 +118,25 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
     private int mCellMarginTop = 1;
     private int mCellMarginRight = 1;
     private int mCellMarginBottom = 1;
+    private int mEventTextSize = 10;
     private int mTimeStartHour = 9;
     private int mTimeStartMinute = 0;
     private int mTimeEndHour = 18;
     private int mTimeEndMinute = 0;
     private int mTimeDuration = 60;
+    private int mTimePadding = 10;
+
+    private TimeInterpreter mTimeInterpreter;
+    private OnCellCheckedChangeListener mOnCellCheckedChangeListener;
+    private OnEventCheckedChangeListener mOnEventCheckedChangeListener;
+
+    public interface OnCellCheckedChangeListener {
+        void onCellCheckedChanged(ScheduleViewGroup scheduleViewGroup, ScheduleCellView checkedScheduleCellView , boolean checked);
+    }
+
+    public interface OnEventCheckedChangeListener {
+        void onEventCheckedChanged(ScheduleViewGroup scheduleViewGroup, ScheduleEventView checkedScheduleEventView , boolean checked);
+    }
 
     /**
      * 한 행에 보여질 아이템 수
@@ -146,21 +176,67 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs, R.styleable.ScheduleViewGroup, 0, 0);
         try {
             mHeaderBackgroundColor = a.getColor(R.styleable.ScheduleViewGroup_headerBackgroundColor, mHeaderBackgroundColor);
+            mHeaderHeight = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_headerHeight, mHeaderHeight);
             mCellMargin = mCellMarginLeft = mCellMarginTop = mCellMarginRight = mCellMarginBottom = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_cellMargin, mCellMargin);
             mCellMarginLeft = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_cellMarginLeft, mCellMarginLeft);
             mCellMarginTop = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_cellMarginTop, mCellMarginTop);
             mCellMarginRight = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_cellMarginRight, mCellMarginRight);
             mCellMarginBottom = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_cellMarginBottom, mCellMarginBottom);
+            mEventTextSize = a.getDimensionPixelSize(R.styleable.ScheduleViewGroup_eventTextSize, mEventTextSize);
             mTimeStartHour = a.getInteger(R.styleable.ScheduleViewGroup_timeStartHour, mTimeStartHour);
             mTimeStartMinute = a.getInteger(R.styleable.ScheduleViewGroup_timeStartMinute, mTimeStartMinute);
             mTimeEndHour = a.getInteger(R.styleable.ScheduleViewGroup_timeEndHour, mTimeEndHour);
             mTimeEndMinute = a.getInteger(R.styleable.ScheduleViewGroup_timeEndMinute, mTimeEndMinute);
             mTimeDuration = a.getInteger(R.styleable.ScheduleViewGroup_timeDuration, mTimeDuration);
+            mTimePadding = a.getInteger(R.styleable.ScheduleViewGroup_timePadding, mTimePadding);
         } finally {
             a.recycle();
         }
 
         initialize();
+
+        // 현재일자 View
+        Drawable icon = getResources().getDrawable(R.drawable.ic_today_black_24dp);
+        icon.setBounds(0, 0, icon.getIntrinsicWidth(), icon.getIntrinsicHeight());
+        mCurrentDateView = new CurrentDateView(mContext);
+        mCurrentDateView.setTextSize(this.mTimeTextSize - 2);
+        mCurrentDateView.setElevation(10);
+        mCurrentDateView.setBackgroundColor(mHeaderBackgroundColor);
+        mCurrentDateView.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // CalendarListener 에 onSelectPicker 이벤트를 전달하고
+                mDateCalendarListener.onSelectPicker(mCurrentDateView.getCurrentDate());
+
+                // 기기에 SoundEffect Click 효과를 수행한다.
+                playSoundEffect(SoundEffectConstants.CLICK);
+            }
+        });
+        this.addView(mCurrentDateView);
+    }
+
+    public DateCalendarListener getDateCalendarListener() {
+        return mDateCalendarListener;
+    }
+
+    public void setDateCalendarListener(DateCalendarListener dateCalendarListener) {
+        this.mDateCalendarListener = dateCalendarListener;
+    }
+
+    public void setCurrentDate(Calendar calendar) {
+        if (mCurrentDateView != null) {
+            mCurrentDateView.setCurrentDate(calendar);
+            loadEvent(calendar);
+        }
+    }
+    private CurrentDateView mCurrentDateView;
+    private DateCalendarListener mDateCalendarListener;
+
+    public interface DateCalendarListener {
+        /**
+         * DatePicker 가 선택되었을때 Listener 에게 알립니다.
+         */
+        void onSelectPicker(Calendar calendar);
     }
 
     private void initialize() {
@@ -170,6 +246,29 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
         // ScheduleTimeManager 설정
         mTimeManager = new ScheduleTimeManager(mTimeStartHour, mTimeStartMinute, mTimeEndHour, mTimeEndMinute, mTimeDuration);
+
+        // Measure settings for time column.
+        mTimeBackgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mTimeBackgroundPaint.setColor(mHeaderBackgroundColor);
+        mTimeTextPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        mTimeTextPaint.setTextAlign(Paint.Align.RIGHT);
+        mTimeTextPaint.setTextSize(ScheduleViewUtil.getResizedDensity(getContext(), this.mTimeTextSize));
+        mTimeTextPaint.setColor(mTimeTextColor);
+        Rect rect = new Rect();
+        mTimeTextPaint.getTextBounds("00 PM", 0, "00 PM".length(), rect);
+
+        // 시간 구분 Paint 설정
+        mTimeLinePaint = new Paint();
+        mTimeLinePaint.setStyle(Paint.Style.STROKE);
+        mTimeLinePaint.setStrokeWidth(1);
+        mTimeLinePaint.setColor(Color.DKGRAY);
+        mTimeCurrentLinePaint = new Paint();
+        mTimeCurrentLinePaint.setStyle(Paint.Style.STROKE);
+        mTimeCurrentLinePaint.setStrokeWidth(2);
+        mTimeCurrentLinePaint.setColor(Color.RED);
+
+        // TimeWidth 설정
+        calculateTimeWidth();
 
         // ScaledMinimumFlingVelocity, ScaledTouchSlop 초기화.
         mMinimumFlingVelocity = ViewConfiguration.get(mContext).getScaledMinimumFlingVelocity();
@@ -218,9 +317,25 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         });
     }
 
-    public void loadHeader(Calendar calendar) {
+    /**
+     * 왼쪽 Row 의 Time 표시 Text 를 비교하여 가장 긴 문자열에 맞는 timeWidth 값을 계산한다.
+     * mTimeWidth = 가장 긴 Time 문자열의 int 형 Width 값
+     */
+    private void calculateTimeWidth() {
+        this.mTimeWidth = 0;
+        for (TimeStartEnd timeStartEnd : mTimeManager.getTimeStartEndList()) {
+            // Measure time string and get max width.
+            String time = getTimeInterpreter().interpretTime(timeStartEnd.getTimeStart());
+            if (time == null)
+                throw new IllegalStateException("A DateTimeInterpreter must not return null time");
+            mTimeWidth = Math.max(mTimeWidth, (int) mTimeTextPaint.measureText(time));
+        }
+        mTimeWidth = mTimeWidth + mTimePadding * 2;
+    }
+
+    public void loadHeader() {
         if (mHeaderLoader != null) {
-            mHeaders = mHeaderLoader.onLoad(calendar);
+            mHeaders = mHeaderLoader.onLoad();
             removeHeaderViews();
             addHeaderViews(mHeaders);
         }
@@ -314,8 +429,10 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
             view.setTimeStart(timeStartEnd.getTimeStart());
             view.setTimeEnd(timeStartEnd.getTimeEnd());
 
+            view.setElevation(1);
             view.setClickable(true);
             view.setCheckable(true);
+            view.setOnCheckedChangeListener(this);
             view.setOnDragListener(new DragListener());
             this.addView(view);
             view.setMargin(mCellMarginLeft, mCellMarginTop, mCellMarginRight, mCellMarginBottom);
@@ -337,6 +454,8 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
     public void loadEvent(Calendar calendar) {
         if (mEventLoader != null) {
+            if (mEvents != null)
+                mEvents.clear();
             mEvents = mEventLoader.onLoad(calendar);
             removeEventViews();
             addEventViews(mEvents);
@@ -356,13 +475,11 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
             // Set Margin
             view.setTag("scheduleCardView" + String.valueOf(index));
-            view.setHeaderNode(scheduleEvent.getHeaderNode());
-            view.setTimeStart(scheduleEvent.getStartTime());
-            view.setTimeEnd(scheduleEvent.getEndTime());
-            view.setContents(scheduleEvent.getContents());
+            view.setEvent(scheduleEvent);
             view.setOnLongClickListener(this);
             view.setOnCheckedChangeListener(this);
-            view.setElevation(3);
+            view.setElevation(1);
+            view.setEventTextSize(mEventTextSize);
             this.addView(view);
             view.setMargin(mCellMarginLeft, mCellMarginTop, mCellMarginRight, mCellMarginBottom);
             mEventReference.add(view);
@@ -374,6 +491,12 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                 bringChildToFront(headerView);
             }
+        }
+
+        // 현재일자 View
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+            // Lollipop 이전 버전에서는 bringChildToFront 로 Z순서 변경
+            bringChildToFront(mCurrentDateView);
         }
 
         // 같은 Header 내에 Cell(시간)이 겹치는 Event 에 대하여 Bound 설정(Cell Width 를 분할하여 최대폭 설정)
@@ -519,21 +642,31 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         }
     }
 
-    public void setColor(@ColorInt int color) {
+    public void setEventColor(ScheduleEvent event, @ColorInt int color) {
         for (int i = 0; i < getChildCount(); i++) {
             if (getChildAt(i) instanceof ScheduleEventView) {
                 ScheduleEventView view = (ScheduleEventView) getChildAt(i);
-                view.setBackgroundColor(color);
+                if (view.getEvent().equals(event))
+                    view.setBackgroundColor(color);
             }
         }
         invalidate();
     }
 
     @Override
+    public void onCheckedChanged(ScheduleCellView checkableView, boolean checked) {
+        if (mOnCellCheckedChangeListener != null)
+            mOnCellCheckedChangeListener.onCellCheckedChanged(this, checkableView, checked);
+
+        checkableView.setElevation(checked ? 4 : 1);
+    }
+
+    @Override
     public void onCheckedChanged(ScheduleEventView checkableView, boolean checked) {
-        String message;
-        message = checkableView.getContents() + (checked ? "True" : "False");
-        Toast.makeText(mContext, message, Toast.LENGTH_SHORT).show();
+        if (mOnEventCheckedChangeListener != null)
+            mOnEventCheckedChangeListener.onEventCheckedChanged(this, checkableView, checked);
+
+        checkableView.setElevation(checked ? 4 : 1);
     }
 
     @Override
@@ -552,29 +685,23 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
             switch (event.getAction()) {
                 // View Drag Started
                 case DragEvent.ACTION_DRAG_STARTED:
-                    Log.e("DragEvent", "ACTION_DRAG_STARTED");
                     view.setVisibility(View.INVISIBLE);
                     break;
                 // View Drag Entered
                 case DragEvent.ACTION_DRAG_ENTERED:
-                    Log.e("DragEvent", "ACTION_DRAG_ENTERED");
                     v.setPressed(true);
                     break;
                 // View Drag Exited
                 case DragEvent.ACTION_DRAG_EXITED:
-                    Log.e("DragEvent", "ACTION_DRAG_EXITED");
                     v.setPressed(false);
-//                    view.setVisibility(View.VISIBLE);
                     break;
                 // View Drag Drop
                 case DragEvent.ACTION_DROP:
-                    Log.e("DragEvent", "ACTION_DROP");
                     v.setPressed(false);
                     view.setVisibility(View.VISIBLE);
                     break;
                 // View Drag Ended
                 case DragEvent.ACTION_DRAG_ENDED:
-                    Log.e("DragEvent", "ACTION_DRAG_ENDED");
                     v.setPressed(false);
                     view.post(new Runnable() {
                         @Override
@@ -631,7 +758,7 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         final int specSizeWidth = MeasureSpec.getSize(widthMeasureSpec);
         final int specSizeHeight = MeasureSpec.getSize(heightMeasureSpec);
 
-        final int desiredWidth = mDesiredWidth = specSizeWidth - getPaddingLeft() - getPaddingRight();
+        final int desiredWidth = mDesiredWidth = specSizeWidth - getPaddingLeft() - getPaddingRight() - mTimeWidth;
         final int desiredHeight = specSizeHeight - getPaddingTop() - getPaddingBottom();
 
         final int timeRowCount = mTimeManager.getTimeCount();
@@ -695,7 +822,6 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         setMeasuredDimension(specSizeWidth, specSizeHeight);
 
         int count = getChildCount();
-        mHeaderRowCount = 1;
 
         // For 문에서 Measure 정의에 사용될 로컬변수
         int headerSizeWidth;
@@ -715,20 +841,21 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                     headerChildCount = headerNode.getChildren().size();
                     // Parent 의 경우 Child 수 만큼 Merge 되기 때문에 Child 들의 사이 Margin (left, right) 값이 추가로 Width 로 들어간다.
                     headerSizeWidth = mColumnWidth * headerChildCount - (mCellMarginLeft + mCellMarginRight);
-                    mHeaderRowCount = 2;
                 }
 
                 childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(headerSizeWidth, MeasureSpec.EXACTLY);
                 childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(mHeaderHeight, MeasureSpec.EXACTLY);
-                child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             } else if (child instanceof ScheduleEventView) {
                 childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mColumnWidth, MeasureSpec.EXACTLY);
                 childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(mHourHeight, MeasureSpec.EXACTLY);
+            } else if (child.equals(mCurrentDateView)) {
+                // Header Today 버튼
+                childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mTimeWidth, MeasureSpec.EXACTLY);
+                childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(getDrawEventsTop() - getPaddingTop(), MeasureSpec.EXACTLY);
             } else {
                 childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mColumnWidth - (mCellMarginLeft + mCellMarginRight), MeasureSpec.EXACTLY);
                 childHeightMeasureSpec = MeasureSpec.makeMeasureSpec(mHourHeight, MeasureSpec.EXACTLY);
             }
-
             child.measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
     }
@@ -770,22 +897,27 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
 
                 // Parent
                 if (header.getChildren().size() > 0) {
-                    child.layout(headerParentLeftSum,
+                    child.layout(headerParentLeftSum + mTimeWidth,
                             headerParentTop,
-                            headerParentLeftSum + child.getMeasuredWidth(),
+                            headerParentLeftSum + child.getMeasuredWidth()  + mTimeWidth,
                             headerParentTop + child.getMeasuredHeight());
                     headerParentLeftSum += child.getMeasuredWidth() + mCellMarginRight + mCellMarginLeft;
                 } else {
-                    child.layout(headerChildLeftSum,
+                    child.layout(headerChildLeftSum + mTimeWidth,
                             headerChildTop,
-                            headerChildLeftSum + child.getMeasuredWidth(),
+                            headerChildLeftSum + child.getMeasuredWidth() + mTimeWidth,
                             headerChildTop + child.getMeasuredHeight());
                     headerChildLeftSum += child.getMeasuredWidth() + mCellMarginRight + mCellMarginLeft;
                 }
+            } else if (child.equals(mCurrentDateView)) {
+                // Header Today 버튼
+                child.layout(getPaddingLeft(), getPaddingTop(), mTimeWidth - 1, getDrawEventsTop() - getPaddingTop());
             }
         }
 
         // ScheduleViewGroup 의 Child 중 ScheduleCellView Layout 작업.
+        int timeStartMinute = mTimeManager.getTimeStartMinute();
+        float topMinute, bottomMinute;
         for (int i = 0; i < count; i++) {
             final View child = getChildAt(i);
             if (child.getVisibility() == View.GONE) {
@@ -808,14 +940,42 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                 TreeNode<ScheduleHeader> headerNode = eventView.getHeaderNode();
                 CheckableHeaderView headerView = findHeaderView(headerNode);
 
-                float childTop = mHourHeight * (eventView.top - mTimeManager.getTimeStartMinute()) / mTimeDuration + mCurrentOrigin.y + eventTop + mCellMarginTop;
-                float childBottom = mHourHeight * (eventView.bottom - mTimeManager.getTimeStartMinute()) / mTimeDuration + mCurrentOrigin.y + eventTop - (mCellMarginTop + mCellMarginBottom);
+                topMinute = eventView.top - timeStartMinute;
+                bottomMinute = eventView.bottom - timeStartMinute;
+
+                float childTop = mHourHeight * topMinute / mTimeDuration + mCurrentOrigin.y + eventTop;
+                childTop += topMinute / mTimeDuration * (mCellMarginTop + mCellMarginBottom);
+                float childBottom = mHourHeight * bottomMinute / mTimeDuration + mCurrentOrigin.y + eventTop;
+                childBottom += bottomMinute / mTimeDuration * (mCellMarginTop + mCellMarginBottom) - (mCellMarginTop + mCellMarginBottom);
                 float childLeft = headerView.getBounds().left + eventView.left * headerView.getBounds().width() + mCellMarginLeft;
                 float childRight = childLeft + eventView.width * headerView.getBounds().width() - (mCellMarginLeft + mCellMarginRight);
 
                 child.layout((int) childLeft, (int) childTop, (int) childRight, (int) childBottom);
             }
         }
+    }
+
+
+    @Override
+    protected void dispatchDraw(Canvas canvas) {
+        super.dispatchDraw(canvas);
+
+        // 시간 분할 그리기
+        canvas.clipRect(getPaddingLeft(), getDrawEventsTop(), mTimeWidth, getHeight(), Region.Op.REPLACE);
+        int height = getDrawEventsTop() + (mCellMarginTop + mHourHeight + mCellMarginBottom) * mTimeManager.getTimeCount();
+        canvas.drawRect(new RectF(getPaddingLeft(), getPaddingTop(), mTimeWidth, height), mTimeBackgroundPaint);
+        float top = getDrawEventsTop() + mCurrentOrigin.y;
+        for (TimeStartEnd timeStartEnd : mTimeManager.getTimeStartEndList()) {
+            String time = getTimeInterpreter().interpretTime(timeStartEnd.getTimeStart());
+            canvas.drawText(time, mTimeWidth - mTimePadding, top + 20, mTimeTextPaint);
+            canvas.drawLine(getPaddingLeft() + 4, top - 1, mTimeWidth - 4, top - 1, mTimeLinePaint);
+            top += (mCellMarginTop + mHourHeight + mCellMarginBottom);
+        }
+
+        // 현재시각 그리기
+        top = getDrawEventsTop() + mCurrentOrigin.y;
+        float beforeNow = (mTimeManager.getTimeMinute(Calendar.getInstance()) - mTimeManager.getTimeStartMinute()) * mHourHeight / 60;
+        canvas.drawLine(getPaddingLeft() + 4, top + beforeNow, mTimeWidth - 4, top + beforeNow, mTimeCurrentLinePaint);
     }
 
     private CheckableHeaderView findHeaderView(TreeNode<ScheduleHeader> headerNode) {
@@ -835,12 +995,6 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
         Log.e("onSizeChanged", "-onSizeChanged");
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        Log.e("onDraw", "-onDraw");
     }
 
     private int getHeaderSize() {
@@ -1172,6 +1326,7 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
         boolean selectScheduleCell = false;
         final float x = e.getX();
         final float y = e.getY();
+        ScheduleCellView focusedScheduleCellView = findScheduleCellView(x, y);
 
         if (headerView == null) {
             for (int i = 0; i < getChildCount(); i++) {
@@ -1183,8 +1338,13 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                     if (scheduleEventView != null && scheduleEventView == checkable) {
 
                         // EventView 가 선택되어 있는경우 해당 EventView 가 위치한 ScheduleCell Select 하도록 Flag 설정
-                        if (checkable.isChecked())
-                            selectScheduleCell = true;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            if (checkable.isChecked() && scheduleEventView.isChecked() && scheduleEventView.getElevation() > 1)
+                                selectScheduleCell = true;
+                        } else {
+                            if (checkable.isChecked())
+                                selectScheduleCell = true;
+                        }
 
                         checkable.toggle();
                         continue;
@@ -1192,15 +1352,30 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
                     if (scheduleCellView != null && scheduleCellView == checkable) {
                         continue;
                     }
-                    if (checkable.isChecked())
-                        checkable.setChecked(false);
+
+                    // 아 머리아퍼 일단 이런식으로 처리만...
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        boolean usingCheck = true;
+                        if (checkable.isChecked()) {
+                            if (checkable instanceof ScheduleCellView && checkable.equals(focusedScheduleCellView)) {
+                                if (((ScheduleCellView) checkable).getElevation() > 1) {
+                                    usingCheck = false;
+                                }
+                            }
+                            if (usingCheck)
+                                checkable.setChecked(false);
+                        }
+                    } else {
+                        if (checkable.isChecked()) {
+                            checkable.setChecked(false);
+                        }
+                    }
                 }
             }
 
             // Event 선택 해제와 함께 Background Cell 을 선택해준다.
             if (selectScheduleCell) {
-                ScheduleCellView cellView = findScheduleCellView(x, y);
-                cellView.setChecked(true);
+                focusedScheduleCellView.setChecked(true);
             }
         }
     }
@@ -1254,11 +1429,61 @@ public class ScheduleViewGroup extends FrameLayout implements View.OnClickListen
             return null;
     }
 
+    public TimeInterpreter getTimeInterpreter() {
+        if (mTimeInterpreter == null) {
+            mTimeInterpreter = new TimeInterpreter() {
+                @Override
+                public String interpretYearMonthDay(Calendar calendar) {
+                    try {
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy" + System.getProperty("line.separator") + "MM/dd", Locale.getDefault());
+                        return sdf.format(calendar.getTime());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return "";
+                    }
+                }
+
+                @Override
+                public String interpretTime(Calendar calendar) {
+                    try {
+                        SimpleDateFormat sdf = DateFormat.is24HourFormat(getContext()) ? new SimpleDateFormat("HH:mm", Locale.getDefault()) : new SimpleDateFormat("a hh:mm", Locale.getDefault());
+                        return sdf.format(calendar.getTime());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return "";
+                    }
+                }
+            };
+        }
+        return mTimeInterpreter;
+    }
+
+    public void setTimeInterpreter(TimeInterpreter timeInterpreter) {
+        this.mTimeInterpreter = timeInterpreter;
+        calculateTimeWidth();
+    }
+
     public void setHeaderLoadListener(HeaderLoader.HeaderLoadListener headerLoadListener) {
         if (mHeaderLoader != null)
             this.mHeaderLoader.setHeaderLoadListener(headerLoadListener);
         else
             this.mHeaderLoader = new HeaderLoader(headerLoadListener);
+    }
+
+    public OnCellCheckedChangeListener getOnCellCheckedChangeListener() {
+        return mOnCellCheckedChangeListener;
+    }
+
+    public void setOnCellCheckedChangeListener(OnCellCheckedChangeListener mOnCellCheckedChangeListener) {
+        this.mOnCellCheckedChangeListener = mOnCellCheckedChangeListener;
+    }
+
+    public OnEventCheckedChangeListener getOnEventCheckedChangeListener() {
+        return mOnEventCheckedChangeListener;
+    }
+
+    public void setOnEventCheckedChangeListener(OnEventCheckedChangeListener mOnEventCheckedChangeListener) {
+        this.mOnEventCheckedChangeListener = mOnEventCheckedChangeListener;
     }
 
     @Nullable

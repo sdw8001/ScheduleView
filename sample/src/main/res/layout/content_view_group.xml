@@ -46,9 +46,10 @@
 
     <com.github.sdw8001.scheduleview.view.ScheduleViewGroup
         android:id="@+id/ScheduleViewGroup"
-        android:layout_width="1000dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:layout_below="@id/LinearLayout_Colors"
-        app:headerBackgroundColor="#FF738FFE"/>
+        app:headerBackgroundColor="#FF738FFE"
+        app:headerHeight="40dp" />
 
 </RelativeLayout>

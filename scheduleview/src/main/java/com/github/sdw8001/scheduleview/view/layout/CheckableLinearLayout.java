@@ -3,8 +3,11 @@ package com.github.sdw8001.scheduleview.view.layout;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.ColorStateList;
+import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.Path;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.RippleDrawable;
@@ -38,6 +41,7 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
     private static final int[] CHECKED_STATE_SET = {android.R.attr.state_checked};
     @ColorInt
     private int mBackgroundColor = Color.LTGRAY;
+    private OnCheckedChangeListener mOnCheckedChangeListener;
 
     public CheckableLinearLayout(Context context) {
         this(context, null);
@@ -209,6 +213,8 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
             mChecked = checked;
             refreshDrawableState();
             setCheckedRecursive(this, checked);
+            if (mOnCheckedChangeListener != null)
+                mOnCheckedChangeListener.onCheckedChanged(this, checked);
         }
     }
 
@@ -278,7 +284,7 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
         }
 
         // unchecked
-        uncheckedColorDrawable.setColor(getColorWithAlpha(uncheckedColorDrawable.getColor(), 0.25f));
+        uncheckedColorDrawable.setColor(getColorWithAlpha(uncheckedColorDrawable.getColor(), 0.15f));
         drawable.addState(new int[]{-android.R.attr.state_checked}, uncheckedColorDrawable);
         return drawable;
     }
@@ -425,6 +431,11 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
         }
     }
 
+    // getter & setter 메서드
+    public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {
+        this.mOnCheckedChangeListener = listener;
+    }
+
     public int getMarginLeft() {
         if (getLayoutParams() instanceof MarginLayoutParams) {
             return pxToDp(((MarginLayoutParams) getLayoutParams()).leftMargin);
@@ -501,6 +512,10 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
     private int pxToDp(int px) {
 //        return (int) (px / getContext().getResources().getDisplayMetrics().density);
         return px;
+    }
+
+    public interface OnCheckedChangeListener {
+        void onCheckedChanged(CheckableLinearLayout checkableView, boolean checked);
     }
 
     public static class LayoutParams extends MarginLayoutParams {

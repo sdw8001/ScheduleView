@@ -1,5 +1,8 @@
 package com.github.sdw8001.scheduleview.util;
 
+import android.content.Context;
+import android.util.TypedValue;
+
 import com.github.sdw8001.scheduleview.event.ScheduleViewEvent;
 import com.github.sdw8001.scheduleview.header.Header;
 import com.github.sdw8001.scheduleview.view.ScheduleView;
@@ -115,5 +118,18 @@ public class ScheduleViewUtil {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         return calendar;
+    }
+
+    /**
+     * <pre>
+     * 해상도에 맞춰진 Size 값 반환
+     * (기기별 Density 만큼 곱하여 계산된 값)
+     * </pre>
+     *
+     * @param size 해상도에 맞게 변환할 Size
+     * @return 해상도에 맞게 변환된 Size
+     */
+    public static float getResizedDensity(Context context, int size) {
+        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, size, context.getResources().getDisplayMetrics());
     }
 }

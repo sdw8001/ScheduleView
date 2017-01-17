@@ -30,9 +30,9 @@ public class HeaderLoader implements IHeaderLoader {
     }
 
     @Override
-    public List<TreeNode<ScheduleHeader>> onLoad(Calendar calendar) {
+    public List<TreeNode<ScheduleHeader>> onLoad() {
         if (mHeaderLoadListener != null)
-            return mHeaderLoadListener.onHeaderLoad(calendar);
+            return mHeaderLoadListener.onHeaderLoad();
         else
             return null;
     }
@@ -40,9 +40,8 @@ public class HeaderLoader implements IHeaderLoader {
     public interface HeaderLoadListener {
         /**
          * ScheduleViewGroup 데이터 로드 Listener 입니다. onEventLoad() 를 통해 Events 를 Load 합니다.
-         * @param dateCalendar Load 에 사용될 선택된 Calendar
          * @return ScheduleHeader 목록을 반환합니다.
          */
-        List<TreeNode<ScheduleHeader>> onHeaderLoad(Calendar dateCalendar);
+        List<TreeNode<ScheduleHeader>> onHeaderLoad();
     }
 }

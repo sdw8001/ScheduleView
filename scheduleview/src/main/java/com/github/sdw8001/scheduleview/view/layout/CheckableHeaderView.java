@@ -1,8 +1,12 @@
 package com.github.sdw8001.scheduleview.view.layout;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.view.Gravity;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.sdw8001.scheduleview.header.ScheduleHeader;
@@ -26,7 +30,9 @@ public class CheckableHeaderView extends CheckableLinearLayout {
     public CheckableHeaderView(Context context, AttributeSet attrs) {
         super(context, attrs);
         contents = new TextView(context);
-        addView(contents);
+        contents.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
+        addView(contents, params);
     }
 
     @Override

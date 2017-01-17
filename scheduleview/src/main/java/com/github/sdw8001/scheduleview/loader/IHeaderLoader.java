@@ -15,8 +15,7 @@ public interface IHeaderLoader {
 
     /**
      * Events 목록 Load
-     * @param calendar Load 에 사용될 Date Calendar
      * @return ScheduleEvent 목록
      */
-    List<TreeNode<ScheduleHeader>> onLoad(Calendar calendar);
+    List<TreeNode<ScheduleHeader>> onLoad();
 }

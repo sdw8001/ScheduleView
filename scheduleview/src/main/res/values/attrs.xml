@@ -2,16 +2,19 @@
 <resources>
 
     <attr name="headerBackgroundColor" format="color" />
+    <attr name="headerHeight" format="dimension" />
     <attr name="cellMargin" format="dimension" />
     <attr name="cellMarginLeft" format="dimension" />
     <attr name="cellMarginTop" format="dimension" />
     <attr name="cellMarginRight" format="dimension" />
     <attr name="cellMarginBottom" format="dimension" />
+    <attr name="eventTextSize" format="dimension" />
     <attr name="timeStartHour" format="dimension" />
     <attr name="timeStartMinute" format="dimension" />
     <attr name="timeEndHour" format="dimension" />
     <attr name="timeEndMinute" format="dimension" />
     <attr name="timeDuration" format="dimension" />
+    <attr name="timePadding" format="dimension" />
 
 
     <attr name="firstDayOfWeek" format="enum">
@@ -27,7 +30,6 @@
     <attr name="minHourHeight" format="dimension" />
     <attr name="maxHourHeight" format="dimension" />
     <attr name="textSize" format="dimension" />
-    <attr name="eventTextSize" format="dimension" />
     <attr name="headerColumnPadding" format="dimension" />
     <attr name="headerRowPadding" format="dimension" />
     <attr name="columnGap" format="dimension" />
@@ -194,15 +196,18 @@
     </declare-styleable>
     <declare-styleable name="ScheduleViewGroup">
         <attr name="headerBackgroundColor" />
+        <attr name="headerHeight" />
         <attr name="cellMargin" />
         <attr name="cellMarginLeft" />
         <attr name="cellMarginTop" />
         <attr name="cellMarginRight" />
         <attr name="cellMarginBottom" />
+        <attr name="eventTextSize" />
         <attr name="timeStartHour" />
         <attr name="timeStartMinute" />
         <attr name="timeEndHour" />
         <attr name="timeEndMinute" />
         <attr name="timeDuration" />
+        <attr name="timePadding" />
     </declare-styleable>
 </resources>

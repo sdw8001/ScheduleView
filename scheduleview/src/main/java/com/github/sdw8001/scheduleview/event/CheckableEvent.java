@@ -1,6 +1,7 @@
 package com.github.sdw8001.scheduleview.event;
 
 import android.graphics.Rect;
+import android.graphics.RectF;
 
 import com.github.sdw8001.scheduleview.header.ScheduleHeader;
 import com.github.sdw8001.scheduleview.header.TreeNode;
@@ -14,7 +15,7 @@ import java.util.Calendar;
 
 public abstract class CheckableEvent {
     private TreeNode<ScheduleHeader> mHeaderNode;
-    private Rect mBounds = new Rect();
+    private RectF mBounds = new RectF();
     private Rect mPadding = new Rect();
     private Rect mMargin = new Rect();
     private Calendar mStartTime;
@@ -34,7 +35,7 @@ public abstract class CheckableEvent {
         this.mHeaderNode = headerNode;
     }
 
-    public Rect getBounds() {
+    public RectF getBounds() {
         return mBounds;
     }
 

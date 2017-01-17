@@ -3,6 +3,8 @@ package com.github.sdw8001.scheduleview.view.layout;
 import android.content.Context;
 import android.graphics.Rect;
 import android.util.AttributeSet;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.sdw8001.scheduleview.header.ScheduleHeader;
@@ -15,13 +17,14 @@ import java.util.Calendar;
  * Checkable ScheduleCardView. (CardView Style)
  */
 
-public class ScheduleCellView extends CheckableLinearLayout {
+public class ScheduleCellView extends CheckableLinearLayout implements CheckableLinearLayout.OnCheckedChangeListener {
 
     private final Rect mBounds = new Rect();
-    private TextView mContents;
+    private TextView txtView_Contents;
     private TreeNode<ScheduleHeader> mHeaderNode;
     private Calendar mTimeStart;
     private Calendar mTimeEnd;
+    private OnCheckedChangeListener mOnCheckedChangeListener;
 
     public ScheduleCellView(Context context) {
         this(context, null);
@@ -29,8 +32,9 @@ public class ScheduleCellView extends CheckableLinearLayout {
 
     public ScheduleCellView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mContents = new TextView(context);
-        addView(mContents);
+        txtView_Contents = new TextView(context);
+        addView(txtView_Contents);
+        super.setOnCheckedChangeListener(this);
     }
 
     @Override
@@ -46,9 +50,11 @@ public class ScheduleCellView extends CheckableLinearLayout {
         return mBounds;
     }
 
-    public TextView getContents() {
-        return mContents;
+
+    public String getContents() {
+        return txtView_Contents.getText().toString();
     }
+
 
     public TreeNode<ScheduleHeader> getHeaderNode() {
         return mHeaderNode;
@@ -72,5 +78,19 @@ public class ScheduleCellView extends CheckableLinearLayout {
 
     public void setTimeEnd(Calendar timeEnd) {
         this.mTimeEnd = (Calendar) timeEnd.clone();
+    }
+
+    public void setOnCheckedChangeListener(OnCheckedChangeListener listener) {
+        this.mOnCheckedChangeListener = listener;
+    }
+
+    @Override
+    public void onCheckedChanged(CheckableLinearLayout checkableView, boolean checked) {
+        if (mOnCheckedChangeListener != null)
+            mOnCheckedChangeListener.onCheckedChanged(this, checked);
+    }
+
+    public interface OnCheckedChangeListener {
+        void onCheckedChanged(ScheduleCellView checkableView, boolean checked);
     }
 }

@@ -81,6 +81,15 @@ public class ScheduleTimeManager {
     }
 
     /**
+     * Calendar 의 시간을 분으로 환산하여 반환.
+     * @param calendar 변환할 Calendar
+     * @return calendar 의 시간과 분을 Minute 환산하여 반환
+     */
+    public int getTimeMinute(Calendar calendar) {
+        return calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+    }
+
+    /**
      * 종료시각을 분으로 환산하여 반환.
      * @return 종료시각 Minute
      */

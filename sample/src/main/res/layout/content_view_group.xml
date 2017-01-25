@@ -32,16 +32,22 @@
             android:text="Red" />
 
         <Button
-            android:id="@+id/ButtonEventLoad"
+            android:id="@+id/ButtonHeaderParent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Red" />
+            android:text="HeaderParent" />
 
         <Button
-            android:id="@+id/ButtonEventRemove"
+            android:id="@+id/ButtonHeaderChild"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Red" />
+            android:text="HeaderChild" />
+
+        <Button
+            android:id="@+id/ButtonSetColumnCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="컬럼 Count 설정" />
     </LinearLayout>
 
     <com.github.sdw8001.scheduleview.view.ScheduleViewGroup
@@ -49,10 +55,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@id/LinearLayout_Colors"
-        app:timeStartHour="8"
-        app:timeStartMinute="30"
-        app:timeEndHour="14"
-        app:timeEndMinute="40"
+        app:timeStartHour="9"
+        app:timeStartMinute="0"
+        app:timeEndHour="18"
+        app:timeEndMinute="0"
         app:timeDuration="30"
         app:headerBackgroundColor="#FF738FFE"
         app:headerHeight="40dp" />

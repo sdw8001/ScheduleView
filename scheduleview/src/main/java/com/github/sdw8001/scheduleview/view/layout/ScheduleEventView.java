@@ -4,7 +4,6 @@ import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
@@ -14,11 +13,11 @@ import android.support.v4.view.ViewCompat;
 import android.support.v7.widget.CardView;
 import android.text.TextUtils;
 import android.util.AttributeSet;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Checkable;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.github.sdw8001.scheduleview.event.ScheduleEvent;
@@ -49,6 +48,7 @@ public class ScheduleEventView extends CardView implements Checkable {
     private boolean useTypeColor = false;
     private int mEventRectShadowRadius = 5;
     private int mEventTextSize = 12;
+    private int mEventTypeDetailTextSize = 12;
     private float typeColorWidth = DEFAULT_TYPE_COLOR_WIDTH;
     public float left;
     public float width;
@@ -83,6 +83,8 @@ public class ScheduleEventView extends CardView implements Checkable {
             this.setRadius(10);
         }
         this.txtView_Contents = new TextView(context);
+        this.txtView_Contents.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        this.txtView_Contents.setTextSize(this.mEventTextSize);
         if (this.useTypeColor)
             this.txtView_Contents.setPadding((int) typeColorWidth, this.txtView_Contents.getPaddingTop(), this.txtView_Contents.getPaddingRight(), this.txtView_Contents.getPaddingBottom());
         else
@@ -103,7 +105,7 @@ public class ScheduleEventView extends CardView implements Checkable {
         // Prepare event TypeDetailFore paint.
         this.eventTypeDetailForePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         this.eventTypeDetailForePaint.setTextAlign(Paint.Align.LEFT);
-        this.eventTypeDetailForePaint.setTextSize(ScheduleViewUtil.getResizedDensity(getContext(), this.mEventTextSize));
+        this.eventTypeDetailForePaint.setTextSize(ScheduleViewUtil.getResizedDensity(getContext(), this.mEventTypeDetailTextSize));
         this.eventTypeDetailForePaint.setShadowLayer(this.mEventRectShadowRadius / 2, 0, 0, Color.GRAY);
         this.eventTypeDetailForePaint.setFakeBoldText(true);
 
@@ -143,10 +145,15 @@ public class ScheduleEventView extends CardView implements Checkable {
         }
     }
 
+//    @Override
+//    public boolean onInterceptTouchEvent(MotionEvent ev) {
+//        this.interceptTouched = !interceptTouched;
+//        return !this.interceptTouched;
+//    }
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        this.interceptTouched = !interceptTouched;
-        return !this.interceptTouched;
+        return onTouchEvent(ev);
     }
 
     @Override
@@ -264,8 +271,16 @@ public class ScheduleEventView extends CardView implements Checkable {
     public void setEventTextSize(int eventTextSize) {
         this.mEventTextSize = eventTextSize;
         this.txtView_Contents.setTextSize(eventTextSize);
-        this.eventTypeDetailForePaint.setTextSize(ScheduleViewUtil.getResizedDensity(getContext(), this.mEventTextSize));
         this.setLayoutTypeDetail(this.event);
+    }
+
+    public int getEventTypeDetailTextSize() {
+        return this.mEventTypeDetailTextSize;
+    }
+
+    public void setEventTypeDetailTextSize(int eventTypeDetailTextSize) {
+        this.mEventTypeDetailTextSize = eventTypeDetailTextSize;
+        this.eventTypeDetailForePaint.setTextSize(ScheduleViewUtil.getResizedDensity(getContext(), eventTypeDetailTextSize));
     }
 
     public String getContents() {

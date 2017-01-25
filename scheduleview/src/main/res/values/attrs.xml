@@ -1,20 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <attr name="headerBackgroundColor" format="color" />
-    <attr name="headerHeight" format="dimension" />
+    <attr name="cellHeight" format="dimension" />
     <attr name="cellMargin" format="dimension" />
     <attr name="cellMarginLeft" format="dimension" />
     <attr name="cellMarginTop" format="dimension" />
     <attr name="cellMarginRight" format="dimension" />
     <attr name="cellMarginBottom" format="dimension" />
+    <attr name="columnCount" format="integer" />
     <attr name="eventTextSize" format="dimension" />
-    <attr name="timeStartHour" format="integer" />
-    <attr name="timeStartMinute" format="integer" />
+    <attr name="eventTypeDetailTextSize" format="dimension" />
+    <attr name="headerBackgroundColor" format="color" />
+    <attr name="headerHeight" format="dimension" />
+    <attr name="headerTextSize" format="dimension" />
+    <attr name="timeDuration" format="integer" />
     <attr name="timeEndHour" format="integer" />
     <attr name="timeEndMinute" format="integer" />
-    <attr name="timeDuration" format="integer" />
+    <attr name="timeStartHour" format="integer" />
+    <attr name="timeStartMinute" format="integer" />
     <attr name="timePadding" format="dimension" />
+    <attr name="timeTextColor" format="color" />
+    <attr name="timeTextSize" format="dimension" />
 
 
     <attr name="firstDayOfWeek" format="enum">
@@ -195,19 +201,25 @@
         <attr name="viewMode" />
     </declare-styleable>
     <declare-styleable name="ScheduleViewGroup">
-        <attr name="headerBackgroundColor" />
-        <attr name="headerHeight" />
+        <attr name="cellHeight" />
         <attr name="cellMargin" />
         <attr name="cellMarginLeft" />
         <attr name="cellMarginTop" />
         <attr name="cellMarginRight" />
         <attr name="cellMarginBottom" />
+        <attr name="columnCount" />
         <attr name="eventTextSize" />
-        <attr name="timeStartHour" />
-        <attr name="timeStartMinute" />
+        <attr name="eventTypeDetailTextSize" />
+        <attr name="headerBackgroundColor" />
+        <attr name="headerHeight" />
+        <attr name="headerTextSize" />
+        <attr name="timeDuration" />
         <attr name="timeEndHour" />
         <attr name="timeEndMinute" />
-        <attr name="timeDuration" />
+        <attr name="timeStartHour" />
+        <attr name="timeStartMinute" />
         <attr name="timePadding" />
+        <attr name="timeTextColor" />
+        <attr name="timeTextSize" />
     </declare-styleable>
 </resources>

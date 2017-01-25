@@ -14,8 +14,8 @@ publish {
     userOrg = 'sdw8001'
     groupId = 'com.github.sdw8001'
     artifactId = 'schedule-view'
-    publishVersion = '0.3.4'
-    desc = 'ScheduleView Library v.0.3.4'
+    publishVersion = '0.3.6'
+    desc = 'ScheduleView Library v.0.3.6'
     website = 'https://github.com/sdw8001/ScheduleView'
 }
 

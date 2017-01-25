@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -22,6 +23,7 @@ public class CheckableHeaderView extends CheckableLinearLayout {
     private final Rect mBounds = new Rect();
     private TreeNode<ScheduleHeader> headerNode;
     private TextView contents;
+    private int contentsTextSize = 12;
 
     public CheckableHeaderView(Context context) {
         this(context, null);
@@ -31,6 +33,7 @@ public class CheckableHeaderView extends CheckableLinearLayout {
         super(context, attrs);
         contents = new TextView(context);
         contents.setGravity(Gravity.CENTER);
+        contents.setTextSize(contentsTextSize);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT);
         addView(contents, params);
     }
@@ -50,6 +53,15 @@ public class CheckableHeaderView extends CheckableLinearLayout {
 
     public TextView getContents() {
         return contents;
+    }
+
+    public int getContentsTextSize() {
+        return contentsTextSize;
+    }
+
+    public void setContentsTextSize(int contentsTextSize) {
+        this.contentsTextSize = contentsTextSize;
+        this.contents.setTextSize(contentsTextSize);
     }
 
     public TreeNode<ScheduleHeader> getHeaderNode() {

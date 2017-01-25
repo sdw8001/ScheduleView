@@ -191,7 +191,10 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
 
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
-        return onTouchEvent(ev);
+        if (mCheckable)
+            return onTouchEvent(ev);
+        else
+            return false;
     }
 
     /**************************/
@@ -209,7 +212,7 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
 
     @Override
     public void setChecked(boolean checked) {
-        if (mCheckable && mChecked != checked) {
+        if (mCheckable) {
             mChecked = checked;
             refreshDrawableState();
             setCheckedRecursive(this, checked);
@@ -257,10 +260,7 @@ public class CheckableLinearLayout extends LinearLayout implements Checkable {
     public void setBackgroundColor(@ColorInt int backgroundColor) {
         if (this.mBackgroundColor != backgroundColor) {
             this.mBackgroundColor = backgroundColor;
-            // setChecked(!mChecked) 를 두번 호출해줌으로 Background 초기화 가 잘 안되는 부분 해결. 근본적인 원인을 알면 좀 더 좋은 방법을 찾을 수 있을것 같은데..
             setBackground(getCheckableStateDrawable(new ColorDrawable(mBackgroundColor)));
-            setChecked(!mChecked);
-            setChecked(!mChecked);
         }
     }
 

@@ -9,6 +9,7 @@ import android.support.annotation.ColorInt;
  */
 
 public class ScheduleEvent extends CheckableEvent {
+    private String key;
     private String contents;
     private String typeDetail;
     @ColorInt
@@ -19,6 +20,14 @@ public class ScheduleEvent extends CheckableEvent {
     private int typeDetailForeColor = Color.WHITE;
     @ColorInt
     private int typeDetailBackColor = Color.WHITE;
+
+    public String getKey() {
+        return key;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 
     public String getContents() {
         return contents;

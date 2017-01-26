@@ -93,10 +93,15 @@ public class ViewGroupActivity extends AppCompatActivity implements HeaderLoader
             @Override
             public void onClick(View v) {
                 scheduleViewGroup.setColumnCount(3);
-                scheduleViewGroup.notifyDataSetChanged();
+                scheduleViewGroup.notifyDataSetChanged(true);
             }
         });
 
+        scheduleViewGroup.setTimeStartHour(8);
+        scheduleViewGroup.setTimeStartMinute(0);
+        scheduleViewGroup.setTimeEndHour(19);
+        scheduleViewGroup.setTimeEndMinute(0);
+        scheduleViewGroup.setTimeDuration(60);
         scheduleViewGroup.setHeaderLoadListener(this);
         scheduleViewGroup.setEventLoadListener(this);
         scheduleViewGroup.setOnCellCheckedChangeListener(this);
@@ -193,10 +198,10 @@ public class ViewGroupActivity extends AppCompatActivity implements HeaderLoader
         dateCalendar.set(Calendar.HOUR_OF_DAY, 10);
         dateCalendar.set(Calendar.MINUTE, 0);
         event.setStartTime((Calendar)dateCalendar.clone());
-        dateCalendar.set(Calendar.HOUR_OF_DAY, 11);
-        dateCalendar.set(Calendar.MINUTE, 0);
+        dateCalendar.set(Calendar.HOUR_OF_DAY, 10);
+        dateCalendar.set(Calendar.MINUTE, 15);
         event.setEndTime((Calendar)dateCalendar.clone());
-        event.setDurationTime(60);
+        event.setDurationTime(15);
         if (headerMode == HEADER_CHILD_MODE)
             event.setHeaderNode(scheduleViewGroup.getHeaderNode("00000235", "1"));
         else

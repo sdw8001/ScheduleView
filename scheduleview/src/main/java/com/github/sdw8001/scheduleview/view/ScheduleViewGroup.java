@@ -357,6 +357,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
     public void setTimeStartMinute(int timeStartMinute) {
         this.mTimeStartMinute = timeStartMinute;
+        if (this.mTimeManager != null)
+            this.mTimeManager.getTimeStart().set(Calendar.MINUTE, timeStartMinute);
     }
 
     public int getTimeStartHour() {
@@ -365,6 +367,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
     public void setTimeStartHour(int timeStartHour) {
         this.mTimeStartHour = timeStartHour;
+        if (this.mTimeManager != null)
+            this.mTimeManager.getTimeStart().set(Calendar.HOUR_OF_DAY, timeStartHour);
     }
 
     public int getTimeEndMinute() {
@@ -373,6 +377,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
     public void setTimeEndMinute(int timeEndMinute) {
         this.mTimeEndMinute = timeEndMinute;
+        if (this.mTimeManager != null)
+            this.mTimeManager.getTimeEnd().set(Calendar.MINUTE, timeEndMinute);
     }
 
     public int getTimeEndHour() {
@@ -381,6 +387,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
     public void setTimeEndHour(int timeEndHour) {
         this.mTimeEndHour = timeEndHour;
+        if (this.mTimeManager != null)
+            this.mTimeManager.getTimeEnd().set(Calendar.HOUR_OF_DAY, timeEndHour);
     }
 
     public int getTimeDuration() {
@@ -389,6 +397,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
     public void setTimeDuration(int timeDuration) {
         this.mTimeDuration = timeDuration;
+        if (this.mTimeManager != null)
+            this.mTimeManager.setTimeDuration(timeDuration);
     }
 
     public int getTimePadding() {
@@ -510,8 +520,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
     /**
      * Refreshes the view and loads the events again.
      */
-    public void notifyDataSetChanged() {
-        mFirstLoad = true;
+    public void notifyDataSetChanged(boolean layoutRefresh) {
+        mFirstLoad = layoutRefresh;
         refactoringEvents();
         requestLayout();
     }
@@ -538,6 +548,7 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
                 mHeaders.clear();
             mFirstLoad = true;
             mHeaders = mHeaderLoader.onLoad();
+            setColumnCount(getHeaderSize());
             removeHeaderViews();
             removeCellViews();
             addCellViews(mHeaders);
@@ -551,6 +562,8 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
      * @param headers
      */
     public void addHeaderViews(List<TreeNode<ScheduleHeader>> headers) {
+        if (headers == null)
+            return;
 
         if (mHeaderReference != null) {
             mHeaderReference.clear();
@@ -588,6 +601,9 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
     }
 
     public void addCellViews(List<TreeNode<ScheduleHeader>> headers) {
+        if (headers == null)
+            return;
+
         if (mCellReference != null) {
             mCellReference.clear();
             mCellReference = null;
@@ -972,7 +988,7 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
                     Calendar endTimeCalendar = Calendar.getInstance();
                     endTimeCalendar.setTimeInMillis(endTimeMillis);
                     scheduleEventView.setTimeEnd(endTimeCalendar);
-                    notifyDataSetChanged();
+                    notifyDataSetChanged(false);
 
                     if (mOnEventDroppedListener != null)
                         mOnEventDroppedListener.onEventDropped(scheduleCellView, scheduleEventView, event);
@@ -1017,6 +1033,10 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         final int specSizeWidth = MeasureSpec.getSize(widthMeasureSpec);
         final int specSizeHeight = MeasureSpec.getSize(heightMeasureSpec);
+
+        setMeasuredDimension(specSizeWidth, specSizeHeight);
+        if (mHeaderReference == null)
+            return;
 
         final int desiredWidth = mDesiredWidth = specSizeWidth - getPaddingLeft() - getPaddingRight() - mTimeWidth;
         final int desiredHeight = specSizeHeight - getPaddingTop() - getPaddingBottom();
@@ -1088,8 +1108,6 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
             mScroller.forceFinished(true);
         }
 
-        setMeasuredDimension(specSizeWidth, specSizeHeight);
-
         // Measure 정의에 사용될 로컬변수
         int headerSizeWidth;
         int childWidthMeasureSpec, childHeightMeasureSpec;
@@ -1137,9 +1155,11 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
 
         // EventView measure
         if (mEventReference != null) {
+            float makeMeasureHeight;
             for (ScheduleEventView eventView : mEventReference) {
+                makeMeasureHeight = (mCellHeight + mCellMarginTop + mCellMarginBottom) * ((0F + eventView.getEvent().getDurationTime()) / mTimeDuration);
                 childWidthMeasureSpec = MeasureSpec.makeMeasureSpec(mColumnWidth, MeasureSpec.EXACTLY);
-                childHeightMeasureSpec = MeasureSpec.makeMeasureSpec((mCellHeight + mCellMarginTop + mCellMarginBottom) * (eventView.getEvent().getDurationTime() / mTimeDuration), MeasureSpec.EXACTLY);
+                childHeightMeasureSpec = MeasureSpec.makeMeasureSpec((int) makeMeasureHeight, MeasureSpec.EXACTLY);
                 eventView.measure(childWidthMeasureSpec, childHeightMeasureSpec);
             }
         }

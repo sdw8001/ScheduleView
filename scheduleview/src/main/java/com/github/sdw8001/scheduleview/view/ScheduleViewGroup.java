@@ -750,6 +750,9 @@ public class ScheduleViewGroup extends FrameLayout implements ScheduleCellView.O
      * 같은 Header 내에 Cell(시간)이 겹치는 Event 에 대하여 Bound 설정(Cell Width 를 분할하여 최대폭 설정)
      */
     private void refactoringEvents() {
+        if (mEventReference == null)
+            return;
+
         List<ScheduleEventView> tempEvents = mEventReference;
         mEventReference = new ArrayList<>();
         while (tempEvents.size() > 0) {
